@@ -1,0 +1,7 @@
+builders:
+  apito_generator:
+    import: "package:flutter_admin_sdk/src/codegen/builder.dart"
+    builder_factories: ["apitoGeneratorBuilder"]
+    build_extensions: { "apito_schema.json": ["lib/generated/apito_generated.dart"] }
+    auto_apply: none
+    build_to: source

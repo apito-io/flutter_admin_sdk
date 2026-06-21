@@ -1,0 +1,26 @@
+# Apito codegen — build_runner + this file only.
+targets:
+  $default:
+    sources:
+      include:
+        - apito_schema.json
+        - lib/**
+        - pubspec.yaml
+        - build.yaml
+        - $package$
+    builders:
+      flutter_admin_sdk|apito_generator:
+        enabled: true
+        generate_for:
+          - apito_schema.json
+        options:
+          endpoint: http://localhost:5050/secured/graphql
+          api_key_env: APITO_API_KEY
+          tenant_id_env: APITO_TENANT_ID
+          secrets_file: secrets.env
+          schema_file: apito_schema.json
+          output: lib/generated
+          models: loan,customer,payment
+          generate_providers: false
+          generate_where: true
+          generate_operations: true

@@ -1,0 +1,205 @@
+# AUTO-GENERATED — DO NOT EDIT
+# Model: loan
+
+query GetLoanList(
+    $connection: LOAN_CONNECTION_FILTER_CONDITION
+    $where: LOANLIST_INPUT_WHERE_PAYLOAD
+    $whereCount: LOAN_LIST_COUNT_INPUT_WHERE_PAYLOAD
+    $sort: LOANLIST_INPUT_SORT_PAYLOAD
+    $page: Int
+    $limit: Int
+) {
+  loanList(connection: $connection, where: $where, sort: $sort, page: $page, limit: $limit) {
+    id
+    data {
+      down_payment
+      total_interest
+      total_amount
+      principal_amount
+      tenant_id
+      closed_at
+      loan_id
+      interest_rate
+      grand_total
+      notes
+      total_outstanding
+      customer_phone
+      created_at
+      business_id
+      item_description
+      item_name
+      installment_count
+      interest_type
+      customer_id
+      updated_at
+      first_payment_date
+      created_by
+      vendor_id
+      installment_type
+      loan_status
+      start_date
+      installment_amount
+      paid_installments
+      next_due_date
+      total_paid
+      remaining_installments
+      customer_name
+    }
+    
+    meta {
+      created_at
+      status
+      updated_at
+    }
+  }    loanListCount(connection: $connection, where: $whereCount, page: $page, limit: $limit) {
+      total
+    }
+}
+
+query GetLoan($id: String!) {
+  loan(_id: $id) {
+    id
+    data {
+      down_payment
+      total_interest
+      total_amount
+      principal_amount
+      tenant_id
+      closed_at
+      loan_id
+      interest_rate
+      grand_total
+      notes
+      total_outstanding
+      customer_phone
+      created_at
+      business_id
+      item_description
+      item_name
+      installment_count
+      interest_type
+      customer_id
+      updated_at
+      first_payment_date
+      created_by
+      vendor_id
+      installment_type
+      loan_status
+      start_date
+      installment_amount
+      paid_installments
+      next_due_date
+      total_paid
+      remaining_installments
+      customer_name
+    }
+    
+    meta {
+      created_at
+      status
+      updated_at
+    }
+  }
+}
+
+mutation CreateLoan($payload: Loan_Create_Payload!, $connect: Loan_Relation_Connect_Payload) {
+  createLoan(payload: $payload, connect: $connect, status: published) {
+    id
+    data {
+      down_payment
+      total_interest
+      total_amount
+      principal_amount
+      tenant_id
+      closed_at
+      loan_id
+      interest_rate
+      grand_total
+      notes
+      total_outstanding
+      customer_phone
+      created_at
+      business_id
+      item_description
+      item_name
+      installment_count
+      interest_type
+      customer_id
+      updated_at
+      first_payment_date
+      created_by
+      vendor_id
+      installment_type
+      loan_status
+      start_date
+      installment_amount
+      paid_installments
+      next_due_date
+      total_paid
+      remaining_installments
+      customer_name
+    }
+    meta {
+      created_at
+      status
+      updated_at
+    }
+  }
+}
+
+mutation UpdateLoan(
+    $id: String!,
+    $deltaUpdate: Boolean,
+    $payload: Loan_Update_Payload!,
+    $connect: Loan_Relation_Connect_Payload,
+    $disconnect: Loan_Relation_Disconnect_Payload
+) {
+  updateLoan(_id: $id, deltaUpdate: $deltaUpdate, payload: $payload, connect: $connect, disconnect: $disconnect, status: published) {
+    id
+    data {
+      down_payment
+      total_interest
+      total_amount
+      principal_amount
+      tenant_id
+      closed_at
+      loan_id
+      interest_rate
+      grand_total
+      notes
+      total_outstanding
+      customer_phone
+      created_at
+      business_id
+      item_description
+      item_name
+      installment_count
+      interest_type
+      customer_id
+      updated_at
+      first_payment_date
+      created_by
+      vendor_id
+      installment_type
+      loan_status
+      start_date
+      installment_amount
+      paid_installments
+      next_due_date
+      total_paid
+      remaining_installments
+      customer_name
+    }
+    meta {
+      created_at
+      status
+      updated_at
+    }
+  }
+}
+
+mutation DeleteLoan($ids: [String]!) {
+  deleteLoan(_ids: $ids) {
+    response
+  }
+}

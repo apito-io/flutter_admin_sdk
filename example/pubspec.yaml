@@ -1,0 +1,14 @@
+name: flutter_admin_sdk_example
+description: Example — live Apito secured GraphQL + codegen + runtime query builder.
+publish_to: none
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter_admin_sdk:
+    path: ../
+
+dev_dependencies:
+  build_runner: ^2.4.0
+  lints: ^5.0.0

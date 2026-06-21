@@ -1,0 +1,59 @@
+# Changelog
+
+All notable changes to `flutter_admin_sdk` are documented here.
+
+## [0.6.0] - 2026-06-21
+
+### Added
+
+- **Riverpod provider codegen** — `generate_providers: true` emits list/detail/create/update/delete providers with schema-aware default sort.
+- **Media field sub-selection** — `queryFields` excludes media types; secured list/get queries use safe selections.
+
+### Changed
+
+- **Mutation providers** — upsert mutations call `.select(queryFields)` and guard `ref.invalidate` with `ref.mounted`.
+- **Model codegen** — `defaultSortField` derived from schema for stable list ordering.
+
+## [0.5.0] - 2026-06-11
+
+### Added
+
+- **`tenantId` on user CRUD** — optional `tenantId` on `searchUsers`, `CreateUserParams`, and `UpdateUserParams`; sent as GraphQL `tenant_id` on pro SaaS engines (parity with `js-admin-sdk` v3.7.0 and `go-admin-sdk` v2.6.0). Omit on general projects.
+
+### Changed
+
+- **`updateUser` validation** — `tenantId` must be non-empty after trim when it is the only field being updated.
+- **Docs** — README, CONTRACT, SYNC_SUMMARY note tenant-aware user ops.
+
+## [0.4.3] - 2026-06-15
+
+### Changed
+
+- **`loginUser` Google auth (engine behavior)** — Verified Google email may auto-link to an existing project user instead of creating a duplicate. New engine errors: `google email not verified`, `google account already linked to another user`, `multiple users matched this email`. No SDK API changes.
+- **`createUser` / `updateUser` uniqueness (engine behavior)** — Open-core projects reject duplicate email and phone project-wide. Stable errors: `email already exists for this project`, `phone already exists for this project`.
+
+## [0.4.0] - 2026-06-08
+
+### Added
+
+- **`loginUser` `tenantId`** — optional `tenantId` on `LoginUserParams`; passed as GraphQL `tenant_id` on system `loginUser`. Required by engine for SaaS projects with per-tenant separate databases.
+
+### Changed
+
+- **Docs** — README login example shows `tenantId` for per-tenant DB SaaS.
+
+## [0.3.0] - 2026-06-05
+
+### Added
+
+- **`loginUser` `google_id_token`** — native mobile Google sign-in via `idToken` on `LoginUserParams`.
+
+### Changed
+
+- **Project files REST** — default `restBaseUrl` resolves to `/secured`; paths `/secured/files/upload|list|delete`.
+
+## [0.2.0] - 2026-06-05
+
+- Package rename `flutter_apito_sdk` → `flutter_admin_sdk`
+- Storage REST + auth/admin GraphQL surface aligned with JS/Go admin SDKs
+- Naming vectors + codegen SDL parity

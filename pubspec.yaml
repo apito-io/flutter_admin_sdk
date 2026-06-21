@@ -1,0 +1,22 @@
+name: flutter_admin_sdk
+description: Flutter admin SDK for Apito GraphQL — chainable query builder, storage, auth, schema codegen.
+version: 0.6.0
+publish_to: none
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  http: ^1.2.0
+  meta: ^1.9.0
+  json_annotation: ^4.9.0
+  path: ^1.9.0
+
+dev_dependencies:
+  build: ^2.4.0
+  build_config: ^1.1.0
+  build_runner: ^2.4.0
+  json_serializable: ^6.7.0
+  test: ^1.24.0
+
+# Codegen: configure flutter_admin_sdk|apito_generator in your app build.yaml only.
