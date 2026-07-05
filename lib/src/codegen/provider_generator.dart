@@ -30,6 +30,7 @@ class ProviderGenerator {
     buffer.writeln('  @override');
     buffer.writeln('  Future<ApitoListResponseTyped<$className>> build({');
     buffer.writeln('    ${className}Where? where,');
+    buffer.writeln('    List<RelationCrudFilter>? relationFilters,');
     buffer.writeln('    int page = 1,');
     buffer.writeln('    int limit = 50,');
     buffer.writeln("    String? sortBy,");
@@ -41,6 +42,11 @@ class ProviderGenerator {
     buffer.writeln('        .select($className.queryFields)');
     buffer.writeln('        .where(where?.toJson() ?? {})');
     buffer.writeln('        .page(page).limit(limit);');
+    buffer.writeln('    if (relationFilters != null) {');
+    buffer.writeln('      for (final rf in relationFilters) {');
+    buffer.writeln('        query = query.relationEq(rf.relation, rf.value);');
+    buffer.writeln('      }');
+    buffer.writeln('    }');
     buffer.writeln('    final effectiveSort = sortBy ?? $className.defaultSortField;');
     buffer.writeln('    if (effectiveSort != null && effectiveSort.isNotEmpty) {');
     buffer.writeln('      query = query.sort(effectiveSort, descending: descending);');

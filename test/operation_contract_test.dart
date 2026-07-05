@@ -25,8 +25,10 @@ void main() {
       expect(doc, contains('mutation UpdateLoan('));
       expect(doc, contains('mutation DeleteLoan('));
       expect(doc, contains('LOANLIST_INPUT_WHERE_PAYLOAD'));
+      expect(doc, contains('LOAN_WHERE_RELATION_FILTER_CONDITION'));
       expect(doc, contains('Loan_Create_Payload'));
       expect(doc, contains('loanList('));
+      expect(doc, contains('relation: \$relation'));
       expect(doc, contains('loanListCount('));
       expect(doc, contains('loan(_id: \$id)'));
     });

@@ -53,6 +53,7 @@ class LoginUserParams {
   final String projectId;
   /// SaaS per-tenant separate DB: required by engine on `loginUser`.
   /// Google paths: engine may auto-link verified email to an existing user.
+  /// On Cloudflare Workers v1, Google paths are unavailable; password login is supported.
   final String? tenantId;
   final String? password;
   final String? email;

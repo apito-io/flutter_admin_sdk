@@ -133,7 +133,53 @@ class ModelGenerator {
     buffer.writeln('  }');
     buffer.writeln('}');
 
+    if (model.relationKeys.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln(_generateRelationKeysClass(model));
+    }
+
     return buffer.toString();
+  }
+
+  String _generateRelationKeysClass(ApitoSchemaModel model) {
+    final className = apitoSingularGraphQLTypeName(model.name);
+    final keysClass = '${className}RelationKeys';
+    final buffer = StringBuffer();
+    buffer.writeln('/// GraphQL relation field names from live schema.');
+    buffer.writeln('///');
+    buffer.writeln('/// List `relation` keys match output relation fields: `known_as` when');
+    buffer.writeln('/// set (e.g. `owner`), otherwise the public model name (e.g. `users`).');
+    buffer.writeln('/// Mutation `connect` keys come from `*_Relation_Connect_Payload`.');
+    buffer.writeln('/// Connect values are scalar related document ids (e.g. `owner_id: "01…"`).');
+    buffer.writeln('class $keysClass {');
+    buffer.writeln('  const $keysClass._();');
+    for (final key in model.relationKeys) {
+      final constName = _relationKeyConstName(key.name);
+      final notes = <String>[];
+      if (key.forListFilter) notes.add('list relation filter');
+      if (key.forConnect) notes.add('mutation connect');
+      buffer.writeln('  /// ${notes.join(' + ')}');
+      buffer.writeln("  static const $constName = '${key.name}';");
+    }
+    buffer.writeln('}');
+    return buffer.toString();
+  }
+
+  String _relationKeyConstName(String graphqlName) {
+    if (graphqlName.endsWith('_id')) {
+      final base = graphqlName.substring(0, graphqlName.length - 3);
+      return _dartFieldName('${base}_connect');
+    }
+    return _dartFieldName(graphqlName);
+  }
+
+  String _connectFactoryName(String graphqlConnectKey) {
+    if (graphqlConnectKey.endsWith('_id')) {
+      return _dartFieldName(
+        graphqlConnectKey.substring(0, graphqlConnectKey.length - 3),
+      );
+    }
+    return _dartFieldName(graphqlConnectKey);
   }
 
   String generatePayloadFile(ApitoSchemaModel model) {
@@ -227,6 +273,16 @@ class ModelGenerator {
     buffer.writeln('  const ${className}Connect({this.fields = const {}});');
     buffer.writeln('  final Map<String, dynamic> fields;');
     buffer.writeln('  Map<String, dynamic> toJson() => fields;');
+    for (final key in model.relationKeys.where((k) => k.forConnect)) {
+      final factoryName = _connectFactoryName(key.name);
+      final constName = _relationKeyConstName(key.name);
+      buffer.writeln();
+      buffer.writeln('  /// Scalar `${key.name}` on mutation/upsert `connect`.');
+      buffer.writeln(
+        '  factory ${className}Connect.$factoryName(String documentId) => '
+        '${className}Connect(fields: {${className}RelationKeys.$constName: documentId});',
+      );
+    }
     buffer.writeln('}');
 
     return buffer.toString();

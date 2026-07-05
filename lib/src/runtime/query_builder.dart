@@ -1,6 +1,9 @@
 import 'client.dart';
+import 'crud_filter.dart';
 import 'document_builder.dart';
 import 'filter.dart';
+import 'filter_variables.dart';
+import 'list_relation_filters.dart';
 import 'mutation_builder.dart';
 import 'naming.dart';
 import 'types.dart';
@@ -12,8 +15,8 @@ class QueryBuilder {
     required this.model,
     this.fields = const ['id'],
     this.whereFilters = const {},
-    this.relationWhere = const {},
-    this.connection = const {},
+    this.relationFilters = const {},
+    this.parentConnectionScope = const {},
     this.connectionFields = const {},
     this.aliasFields = const {},
     this.pageNumber = 1,
@@ -21,14 +24,15 @@ class QueryBuilder {
     this.sortBy,
     this.descending = false,
     this.key,
+    this.supportsRelation = true,
   });
 
   final ApitoClient client;
   final String model;
   final List<String> fields;
   final Map<String, dynamic> whereFilters;
-  final Map<String, dynamic> relationWhere;
-  final Map<String, dynamic> connection;
+  final ApitoListRelationFilter relationFilters;
+  final Map<String, dynamic> parentConnectionScope;
   final Map<String, String> connectionFields;
   final Map<String, String> aliasFields;
   final int pageNumber;
@@ -36,14 +40,18 @@ class QueryBuilder {
   final String? sortBy;
   final bool descending;
   final dynamic key;
+  final bool supportsRelation;
 
-  DocumentBuilder get _docs => DocumentBuilder(model);
+  DocumentBuilder get _docs => DocumentBuilder(
+        model,
+        options: DocumentBuilderOptions(supportsRelation: supportsRelation),
+      );
 
   QueryBuilder _copy({
     List<String>? fields,
     Map<String, dynamic>? whereFilters,
-    Map<String, dynamic>? relationWhere,
-    Map<String, dynamic>? connection,
+    ApitoListRelationFilter? relationFilters,
+    Map<String, dynamic>? parentConnectionScope,
     Map<String, String>? connectionFields,
     Map<String, String>? aliasFields,
     int? pageNumber,
@@ -51,6 +59,7 @@ class QueryBuilder {
     String? sortBy,
     bool? descending,
     dynamic key,
+    bool? supportsRelation,
     bool clearSort = false,
   }) {
     return QueryBuilder(
@@ -58,8 +67,8 @@ class QueryBuilder {
       model: model,
       fields: fields ?? this.fields,
       whereFilters: whereFilters ?? this.whereFilters,
-      relationWhere: relationWhere ?? this.relationWhere,
-      connection: connection ?? this.connection,
+      relationFilters: relationFilters ?? this.relationFilters,
+      parentConnectionScope: parentConnectionScope ?? this.parentConnectionScope,
       connectionFields: connectionFields ?? this.connectionFields,
       aliasFields: aliasFields ?? this.aliasFields,
       pageNumber: pageNumber ?? this.pageNumber,
@@ -67,6 +76,7 @@ class QueryBuilder {
       sortBy: clearSort ? null : (sortBy ?? this.sortBy),
       descending: descending ?? this.descending,
       key: key ?? this.key,
+      supportsRelation: supportsRelation ?? this.supportsRelation,
     );
   }
 
@@ -76,11 +86,48 @@ class QueryBuilder {
   QueryBuilder where(Map<String, dynamic> conditions) =>
       _copy(whereFilters: buildWhereJson(conditions));
 
+  /// GraphQL list `relation` arg — scope by related document id.
   QueryBuilder relation(Map<String, dynamic> conditions) =>
-      _copy(relationWhere: Map<String, dynamic>.from(conditions));
+      _copy(relationFilters: Map<String, Map<String, dynamic>>.from(
+        conditions.map(
+          (key, value) => MapEntry(key, Map<String, dynamic>.from(value as Map)),
+        ),
+      ));
 
+  /// GraphQL list `relation` arg — scope by related document id.
+  ///
+  /// [relationName] must match the output relation field (`known_as` when set).
+  /// Sugar for `relation: { name: { _id: { eq: id } } }`.
+  QueryBuilder relationEq(String relationName, String id) => _copy(
+        relationFilters: mergeListRelationFilters(
+          relationFilters,
+          buildListRelationFilter(relationName, id),
+        ),
+      );
+
+  /// Mixed Refine-style filters split into `where` + `relation`.
+  QueryBuilder filters(List<CrudFilter> crudFilters) {
+    final split = transformRelationFilters(crudFilters);
+    var next = _copy(whereFilters: _buildWhereFromCrudFilters(split.filters));
+    if (split.relation != null) {
+      next = next._copy(
+        relationFilters: mergeListRelationFilters(
+          relationFilters,
+          split.relation!,
+        ),
+      );
+    }
+    return next;
+  }
+
+  /// Parent-document scoped list `connection` (embedded show-page lists only).
+  QueryBuilder withParentConnectionScope(ApitoListConnection scope) =>
+      _copy(parentConnectionScope: scope.toJson());
+
+  /// @deprecated Use [withParentConnectionScope] for parent-document scope, or
+  /// [relationEq] for relation filtering.
   QueryBuilder connectFilter(Map<String, dynamic> connectionFilter) =>
-      _copy(connection: Map<String, dynamic>.from(connectionFilter));
+      _copy(parentConnectionScope: Map<String, dynamic>.from(connectionFilter));
 
   QueryBuilder withConnections(
     Map<String, String> selections, {
@@ -152,25 +199,35 @@ class QueryBuilder {
   Map<String, dynamic> _listVariables({Map<String, dynamic>? whereOverride}) {
     final whereJson = whereOverride ?? whereFilters;
     final hasKey = key != null;
-    final hasRelation = relationWhere.isNotEmpty;
+    final hasRelation = supportsRelation && relationFilters.isNotEmpty;
+    final hasConnectionScope = parentConnectionScope.isNotEmpty;
 
     return {
       if (hasKey) '_key': key,
-      'connection': connection,
-      'where': whereJson,
-      if (hasRelation) 'relationWhere': relationWhere,
-      'whereCount': whereJson,
+      if (supportsRelation) 'relation': hasRelation ? relationFilters : null,
+      if (whereJson.isNotEmpty) 'where': whereJson,
+      if (whereJson.isNotEmpty) 'whereCount': whereJson,
       if (hasKey) '_keyCount': key,
-      if (hasRelation) 'relationWhereCount': relationWhere,
       'sort': _sortPayload(),
       'page': pageNumber,
       'limit': pageLimit,
+      if (hasConnectionScope) 'connection': parentConnectionScope,
     };
   }
 
   Map<String, dynamic>? _sortPayload() {
     if (sortBy == null || sortBy!.isEmpty) return null;
-    return {sortBy!: descending ? 'DESC' : 'ASC'};
+    return {sortBy!: descending ? 'desc' : 'asc'};
+  }
+
+  Map<String, dynamic> _buildWhereFromCrudFilters(List<CrudFilter> filters) {
+    final fieldFilters = filters.whereType<FieldCrudFilter>().map(
+      (f) => MapEntry(
+        f.field,
+        {f.operator: f.value},
+      ),
+    );
+    return Map<String, dynamic>.fromEntries(fieldFilters);
   }
 
   Future<ApitoListResponse> list() async {
@@ -180,7 +237,7 @@ class QueryBuilder {
       fields: fields,
       connectionFields: connectionFields,
       aliasFields: aliasFields,
-      includeRelationWhere: relationWhere.isNotEmpty,
+      includeConnectionScope: parentConnectionScope.isNotEmpty,
       includeKey: key != null,
     );
 
@@ -210,7 +267,7 @@ class QueryBuilder {
   Future<int> count() async {
     final countField = '${apitoMultipleResourceName(model)}Count';
     final document = _docs.buildCountQuery(
-      includeRelationWhere: relationWhere.isNotEmpty,
+      includeConnectionScope: parentConnectionScope.isNotEmpty,
       includeKey: key != null,
     );
     final data = await client.execute(

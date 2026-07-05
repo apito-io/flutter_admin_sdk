@@ -5,6 +5,7 @@ import 'types.dart';
 /// Auth and admin user operations (system GraphQL, aligned with js/go admin SDKs).
 extension ApitoAuth on ApitoClient {
   /// Generate a tenant-scoped API key.
+  /// Not available on Cloudflare Workers v1 (`tenant management is not available on Cloudflare Workers v1`).
   Future<String> generateTenantToken(
     String tenantId, {
     String? duration,
@@ -38,6 +39,7 @@ extension ApitoAuth on ApitoClient {
   /// Project user login (password or Google OAuth). Google paths may auto-link
   /// a verified email to an existing user; handle engine errors for unverified email,
   /// conflicting google_sub, or multiple email matches.
+  /// On Cloudflare Workers v1, Google paths are unavailable; password login is supported.
   Future<LoginUserResponse> loginUser(LoginUserParams params) async {
     final authMethod =
         (params.authMethod.trim().isEmpty ? 'general' : params.authMethod)

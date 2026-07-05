@@ -2,6 +2,21 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
+## [0.6.1] - 2026-07-05
+
+### Added
+
+- **List `relation` filters** — `QueryBuilder.relationEq`, `.filters(List<CrudFilter>)`, `RelationCrudFilter`, and `buildListRelationFilter` emit the secured GraphQL `relation` arg (`{ owner: { _id: { eq } } }`).
+- **Parent connection scope** — `withParentConnectionScope` for embedded show-page lists; `connectFilter` deprecated.
+- **Schema relation keys codegen** — `{Model}RelationKeys` constants and `{Model}Connect.*` factories from introspection (`known_as` + connect payload keys).
+- **Riverpod list providers** — optional `relationFilters` on generated list providers.
+
+### Changed
+
+- **List/count GraphQL variables** — use `relation` (not legacy `relationWhere`); optional `connection` only for parent-document scope.
+- **Sort payload** — lowercase `asc` / `desc` (Apito engine convention).
+- **Cloudflare Workers v1 (`cloudflare_full`)** — document `generateTenantToken` / tenant catalog and Google `loginUser` limitations on Workers; password `loginUser` unchanged.
+
 ## [0.6.0] - 2026-06-21
 
 ### Added

@@ -3,6 +3,21 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../runtime/naming.dart';
+
+/// GraphQL relation key on list `relation` arg or mutation `connect` payload.
+class ApitoSchemaRelationKey {
+  const ApitoSchemaRelationKey({
+    required this.name,
+    this.forListFilter = false,
+    this.forConnect = false,
+  });
+
+  /// Public GraphQL field name (`known_as` when set, else target model name).
+  final String name;
+  final bool forListFilter;
+  final bool forConnect;
+}
+
 /// Parsed Apito field from schema introspection or JSON snapshot.
 class ApitoSchemaField {
   const ApitoSchemaField({
@@ -47,13 +62,25 @@ class ApitoSchemaModel {
     required this.name,
     required this.fields,
     this.relations = const [],
+    this.relationKeys = const [],
     this.sortFieldNames = const [],
   });
 
   final String name;
   final List<ApitoSchemaField> fields;
   final List<String> relations;
+  final List<ApitoSchemaRelationKey> relationKeys;
   final List<String> sortFieldNames;
+
+  List<String> get listRelationFilterKeys => relationKeys
+      .where((k) => k.forListFilter)
+      .map((k) => k.name)
+      .toList();
+
+  List<String> get relationConnectKeys => relationKeys
+      .where((k) => k.forConnect)
+      .map((k) => k.name)
+      .toList();
 
   List<String> get fieldNames => fields.map((f) => f.name).toList();
 
@@ -220,6 +247,7 @@ class SchemaReader {
       models.add(ApitoSchemaModel(
         name: modelName,
         fields: fields,
+        relationKeys: _relationKeysForModel(types, modelName),
         sortFieldNames: sortFieldNames,
       ));
     }
@@ -271,6 +299,16 @@ class SchemaReader {
             },
           )
           .toList();
+      final relationKeys = (raw['relation_keys'] as List<dynamic>? ?? [])
+          .cast<Map<String, dynamic>>()
+          .map(
+            (k) => ApitoSchemaRelationKey(
+              name: k['name'] as String,
+              forListFilter: k['for_list_filter'] as bool? ?? false,
+              forConnect: k['for_connect'] as bool? ?? false,
+            ),
+          )
+          .toList();
       models.add(
         ApitoSchemaModel(
           name: name,
@@ -278,6 +316,7 @@ class SchemaReader {
           relations: (raw['relations'] as List<dynamic>? ?? [])
               .map((e) => e.toString())
               .toList(),
+          relationKeys: relationKeys,
           sortFieldNames: (raw['sort_fields'] as List<dynamic>? ?? [])
               .map((e) => e.toString())
               .toList(),
@@ -286,6 +325,61 @@ class SchemaReader {
     }
 
     return ApitoSchema(models: models);
+  }
+
+  List<ApitoSchemaRelationKey> _relationKeysForModel(
+    List<Map<String, dynamic>> types,
+    String modelName,
+  ) {
+    final filterType = _findInputTypeName(
+      types,
+      apitoWhereRelationFilterConditionType(modelName),
+    );
+    final connectType = _findInputTypeName(
+      types,
+      apitoGraphQLComposedTypeName(modelName, 'Relation_Connect_Payload'),
+    );
+
+    final byName = <String, ApitoSchemaRelationKey>{};
+
+    void addKeys(
+      String? typeName, {
+      required bool forListFilter,
+      required bool forConnect,
+    }) {
+      if (typeName == null || typeName.isEmpty) return;
+      for (final name in _fieldNamesFromInputType(types, typeName)) {
+        final existing = byName[name];
+        byName[name] = ApitoSchemaRelationKey(
+          name: name,
+          forListFilter: forListFilter || (existing?.forListFilter ?? false),
+          forConnect: forConnect || (existing?.forConnect ?? false),
+        );
+      }
+    }
+
+    addKeys(filterType, forListFilter: true, forConnect: false);
+    addKeys(connectType, forListFilter: false, forConnect: true);
+
+    final keys = byName.values.toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    return keys;
+  }
+
+  String? _findInputTypeName(
+    List<Map<String, dynamic>> types,
+    String expected,
+  ) {
+    for (final t in types) {
+      if (t['name'] == expected) return expected;
+    }
+    final normalized = expected.replaceAll('_', '').toLowerCase();
+    for (final t in types) {
+      final name = t['name'] as String?;
+      if (name == null) continue;
+      if (name.replaceAll('_', '').toLowerCase() == normalized) return name;
+    }
+    return null;
   }
 
   String _listFieldToModelName(String listFieldName) {

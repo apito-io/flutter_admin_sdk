@@ -1,10 +1,21 @@
 import 'naming.dart';
 
+/// Options for [DocumentBuilder] list operations.
+class DocumentBuilderOptions {
+  const DocumentBuilderOptions({this.supportsRelation = true});
+
+  /// When false, list/count omit the GraphQL `relation` argument.
+  final bool supportsRelation;
+}
+
 /// Builds GraphQL operation strings for Apito secured/project API.
 class DocumentBuilder {
-  const DocumentBuilder(this.model);
+  const DocumentBuilder(this.model, {this.options = const DocumentBuilderOptions()});
 
   final String model;
+  final DocumentBuilderOptions options;
+
+  bool get _supportsRelation => options.supportsRelation;
 
   String get _listField => apitoMultipleResourceName(model);
   String get _countField => '${_listField}Count';
@@ -17,7 +28,94 @@ class DocumentBuilder {
     Map<String, String> connectionFields = const {},
     Map<String, String> aliasFields = const {},
     bool includeCount = true,
-    bool includeRelationWhere = false,
+    bool includeConnectionScope = false,
+    bool includeKey = false,
+  }) {
+    if (!_supportsRelation) {
+      return buildListQueryWithoutRelation(
+        fields: fields,
+        connectionFields: connectionFields,
+        aliasFields: aliasFields,
+        includeCount: includeCount,
+        includeKey: includeKey,
+      );
+    }
+
+    final connectionSelection = connectionFields.isEmpty
+        ? ''
+        : formatApitoConnectionSubselections(connectionFields, aliasFields);
+
+    final queryVariables = [
+      if (includeKey) r'$_key: ${KEY_TYPE}',
+      r'$relation: ${RELATION}',
+      r'$where: ${WHERE}',
+      r'$whereCount: ${WHERE_COUNT}',
+      r'$sort: ${SORT}',
+      r'$page: Int',
+      r'$limit: Int',
+      if (includeConnectionScope) r'$connection: ${CONNECTION}',
+      if (includeKey) r'$_keyCount: ${KEY_COUNT_TYPE}',
+    ].join('\n    ');
+
+    final vars = queryVariables
+        .replaceAll(r'${KEY_TYPE}', apitoListKeyConditionType(model))
+        .replaceAll(r'${RELATION}', apitoWhereRelationFilterConditionType(model))
+        .replaceAll(r'${WHERE}', apitoWhereInputType(model))
+        .replaceAll(r'${WHERE_COUNT}', apitoListCountWhereInputType(model))
+        .replaceAll(r'${SORT}', apitoSortInputType(model))
+        .replaceAll(r'${CONNECTION}', apitoConnectionFilterConditionType(model))
+        .replaceAll(r'${KEY_COUNT_TYPE}', apitoListCountKeyConditionType(model));
+
+    final queryArguments = [
+      if (includeKey) '_key: \$_key',
+      'relation: \$relation',
+      'where: \$where',
+      'sort: \$sort',
+      'page: \$page',
+      'limit: \$limit',
+      if (includeConnectionScope) 'connection: \$connection',
+    ].join(', ');
+
+    final countArguments = [
+      if (includeKey) '_key: \$_keyCount',
+      'relation: \$relation',
+      'where: \$whereCount',
+      'page: \$page',
+      'limit: \$limit',
+      if (includeConnectionScope) 'connection: \$connection',
+    ].join(', ');
+
+    final countBlock = includeCount
+        ? '''
+    $_countField($countArguments) {
+      total
+    }'''
+        : '';
+
+    return '''
+query Get$_listPascal(
+    $vars
+) {
+  $_listField($queryArguments) {
+    id
+    data {
+      ${fields.join('\n      ')}
+    }
+    $connectionSelection
+    meta {
+      created_at
+      status
+      updated_at
+    }
+  }$countBlock
+}''';
+  }
+
+  String buildListQueryWithoutRelation({
+    required List<String> fields,
+    Map<String, String> connectionFields = const {},
+    Map<String, String> aliasFields = const {},
+    bool includeCount = true,
     bool includeKey = false,
   }) {
     final connectionSelection = connectionFields.isEmpty
@@ -26,31 +124,24 @@ class DocumentBuilder {
 
     final queryVariables = [
       if (includeKey) r'$_key: ${KEY_TYPE}',
-      r'$connection: ${CONNECTION}',
       r'$where: ${WHERE}',
-      if (includeRelationWhere) r'$relationWhere: ${RELATION_WHERE}',
-      if (includeKey) r'$_keyCount: ${KEY_COUNT_TYPE}',
       r'$whereCount: ${WHERE_COUNT}',
-      if (includeRelationWhere) r'$relationWhereCount: ${RELATION_WHERE}',
       r'$sort: ${SORT}',
       r'$page: Int',
       r'$limit: Int',
+      if (includeKey) r'$_keyCount: ${KEY_COUNT_TYPE}',
     ].join('\n    ');
 
     final vars = queryVariables
         .replaceAll(r'${KEY_TYPE}', apitoListKeyConditionType(model))
-        .replaceAll(r'${CONNECTION}', apitoConnectionFilterConditionType(model))
         .replaceAll(r'${WHERE}', apitoWhereInputType(model))
-        .replaceAll(r'${RELATION_WHERE}', apitoWhereRelationFilterConditionType(model))
-        .replaceAll(r'${KEY_COUNT_TYPE}', apitoListCountKeyConditionType(model))
         .replaceAll(r'${WHERE_COUNT}', apitoListCountWhereInputType(model))
-        .replaceAll(r'${SORT}', apitoSortInputType(model));
+        .replaceAll(r'${SORT}', apitoSortInputType(model))
+        .replaceAll(r'${KEY_COUNT_TYPE}', apitoListCountKeyConditionType(model));
 
     final queryArguments = [
       if (includeKey) '_key: \$_key',
-      'connection: \$connection',
       'where: \$where',
-      if (includeRelationWhere) 'relation: \$relationWhere',
       'sort: \$sort',
       'page: \$page',
       'limit: \$limit',
@@ -58,9 +149,7 @@ class DocumentBuilder {
 
     final countArguments = [
       if (includeKey) '_key: \$_keyCount',
-      'connection: \$connection',
       'where: \$whereCount',
-      if (includeRelationWhere) 'relation: \$relationWhereCount',
       'page: \$page',
       'limit: \$limit',
     ].join(', ');
@@ -118,31 +207,60 @@ query Get$_singularPascal(\$id: String!) {
   }
 
   String buildCountQuery({
-    bool includeRelationWhere = false,
+    bool includeConnectionScope = false,
     bool includeKey = false,
   }) {
+    if (!_supportsRelation) {
+      final queryVariables = [
+        if (includeKey) r'$_keyCount: ${KEY_COUNT_TYPE}',
+        r'$whereCount: ${WHERE_COUNT}',
+        r'$page: Int',
+        r'$limit: Int',
+      ].join('\n    ');
+
+      final vars = queryVariables
+          .replaceAll(r'${KEY_COUNT_TYPE}', apitoListCountKeyConditionType(model))
+          .replaceAll(r'${WHERE_COUNT}', apitoListCountWhereInputType(model));
+
+      final countArguments = [
+        if (includeKey) '_key: \$_keyCount',
+        'where: \$whereCount',
+        'page: \$page',
+        'limit: \$limit',
+      ].join(', ');
+
+      return '''
+query Count$_listPascal(
+    $vars
+) {
+  $_countField($countArguments) {
+    total
+  }
+}''';
+    }
+
     final queryVariables = [
       if (includeKey) r'$_keyCount: ${KEY_COUNT_TYPE}',
-      r'$connection: ${CONNECTION}',
+      r'$relation: ${RELATION}',
       r'$whereCount: ${WHERE_COUNT}',
-      if (includeRelationWhere) r'$relationWhereCount: ${RELATION_WHERE}',
       r'$page: Int',
       r'$limit: Int',
+      if (includeConnectionScope) r'$connection: ${CONNECTION}',
     ].join('\n    ');
 
     final vars = queryVariables
         .replaceAll(r'${KEY_COUNT_TYPE}', apitoListCountKeyConditionType(model))
-        .replaceAll(r'${CONNECTION}', apitoConnectionFilterConditionType(model))
+        .replaceAll(r'${RELATION}', apitoWhereRelationFilterConditionType(model))
         .replaceAll(r'${WHERE_COUNT}', apitoListCountWhereInputType(model))
-        .replaceAll(r'${RELATION_WHERE}', apitoWhereRelationFilterConditionType(model));
+        .replaceAll(r'${CONNECTION}', apitoConnectionFilterConditionType(model));
 
     final countArguments = [
       if (includeKey) '_key: \$_keyCount',
-      'connection: \$connection',
+      'relation: \$relation',
       'where: \$whereCount',
-      if (includeRelationWhere) 'relation: \$relationWhereCount',
       'page: \$page',
       'limit: \$limit',
+      if (includeConnectionScope) 'connection: \$connection',
     ].join(', ');
 
     return '''
