@@ -1,5 +1,7 @@
 ---
-alwaysApply: true
+description: Knowledge entry point for flutter_admin_sdk — read .knowledge/README.md before coding in apito/sdk/flutter_admin_sdk
+globs: apito/sdk/flutter_admin_sdk/**
+alwaysApply: false
 ---
 
 # Knowledge base — flutter_admin_sdk
