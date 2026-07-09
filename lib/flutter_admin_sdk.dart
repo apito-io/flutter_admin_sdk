@@ -21,3 +21,4 @@ export 'src/runtime/types.dart';
 export 'src/generated/base_model.dart';
 export 'src/generated/base_provider.dart';
 export 'src/generated/base_where.dart';
+export 'reports.dart';

@@ -46,5 +46,20 @@ void main() {
         {'owner_id': {'eq': 'x'}},
       );
     });
+
+    test('passes between operator through unchanged', () {
+      expect(
+        buildWhereJson({
+          'date': {
+            'between': ['2026-07-08T00:00:00.000Z', '2026-07-08T23:59:59.999Z'],
+          },
+        }),
+        {
+          'date': {
+            'between': ['2026-07-08T00:00:00.000Z', '2026-07-08T23:59:59.999Z'],
+          },
+        },
+      );
+    });
   });
 }

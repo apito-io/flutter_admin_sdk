@@ -2,6 +2,16 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
+## [0.6.2] - 2026-07-09
+
+### Added
+
+- **Reports module** (`lib/reports.dart`) — `food_order_report_summary`, `ledger_report_summary`, `report_date_range`, `food_name_lookup` for Rosna/mobile report UIs.
+
+### Fixed
+
+- **`buildWhereJson`** — `between` and `nbetween` operators pass through unchanged (fixes Apito `date: between requires two values` when filtering report date ranges).
+
 ## [0.6.1] - 2026-07-05
 
 ### Added

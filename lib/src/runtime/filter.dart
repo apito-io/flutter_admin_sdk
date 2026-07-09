@@ -60,6 +60,8 @@ const _operatorKeys = {
   'contains',
   'in',
   'not_in',
+  'between',
+  'nbetween',
 };
 
 bool _isOperatorMap(Map<dynamic, dynamic> map) =>
