@@ -4,6 +4,11 @@ Not git history — the *reasoning* behind changes. Newest on top.
 Format per entry: date, **Changed**, **Why**, **Affected**.
 
 ---
+## 2026-07-09
+- **Changed:** `buildWhereJson` — `between` and `nbetween` in `_operatorKeys`; test in `filter_test.dart`. Reports module (`food_order_report_summary`, `ledger_report_summary`, date range helpers).
+- **Why:** Rosna Order Report hung on Apito error `date: between requires two values` — SDK was rewriting `between: [start,end]` to `between: {eq: [start,end]}`.
+- **Affected:** `lib/src/runtime/filter.dart`, `lib/src/reports/*`, `lib/reports.dart`, `test/filter_test.dart`, `test/reports_test.dart`
+
 ## 2026-07-06
 - **Changed:** Bootstrapped knowledge system for this repo.
 - **Why:** Cross-LLM durable knowledge + working memory.

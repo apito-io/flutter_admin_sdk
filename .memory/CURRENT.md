@@ -1,10 +1,11 @@
 # flutter_admin_sdk — Current
 
 ## Working on
-- _TODO (from in-progress plans)_
+- (idle) Reports module + filter fix landed
 
 ## Next
-- _TODO (from pending plans)_
+- Rosna codegen consumer migration in `rosna-app` (after `secrets.env`)
+- Consider exporting `reportDateBetweenWhere` helper for all date-filtered list queries
 
 ## Last Updated
-2026-07-06
+2026-07-09
