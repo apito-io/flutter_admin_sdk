@@ -28,7 +28,7 @@ void main() {
         'whereCount': {
           'section_code': {'eq': 'A'},
         },
-        'sort': {'roll_no': 'asc'},
+        'sort': {'roll_no': 'ASC'},
         'page': 2,
         'limit': 25,
       });

@@ -217,7 +217,7 @@ class QueryBuilder {
 
   Map<String, dynamic>? _sortPayload() {
     if (sortBy == null || sortBy!.isEmpty) return null;
-    return {sortBy!: descending ? 'desc' : 'asc'};
+    return {sortBy!: descending ? 'DESC' : 'ASC'};
   }
 
   Map<String, dynamic> _buildWhereFromCrudFilters(List<CrudFilter> filters) {

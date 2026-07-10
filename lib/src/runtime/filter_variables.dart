@@ -105,7 +105,8 @@ Map<String, dynamic>? _buildSortFromSorters(List<CrudSort> sorters) {
   if (sorters.isEmpty) return null;
   final sort = <String, dynamic>{};
   for (final s in sorters) {
-    sort[s.field] = s.order == 'desc' ? 'desc' : 'asc';
+    final order = s.order.toLowerCase();
+    sort[s.field] = order == 'desc' ? 'DESC' : 'ASC';
   }
   return sort;
 }
