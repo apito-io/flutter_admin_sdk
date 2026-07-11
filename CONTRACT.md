@@ -40,7 +40,7 @@ All SDKs expose:
 - **REST storage**: `uploadFile`, `listFiles`, `deleteFiles` at `/files/upload|list|delete`
 - **Auth/admin**: `generateTenantToken`, `loginUser`, `googleOAuthState`, `searchUsers`, `searchTenantsByDomain`, `createUser`, `updateUser`, `resetUserPassword`, `deleteUser`
 
-Pro SaaS user ops accept optional **`tenantId`** / GraphQL `tenant_id` on `searchUsers`, `createUser`, and `updateUser` (in addition to `loginUser`). Omit on general projects.
+Pro SaaS user ops accept optional **`tenantId`** / GraphQL `tenant_id` on `searchUsers`, `createUser`, and `updateUser` (in addition to `loginUser`). Omit on general projects. **`searchUsers`** also accepts optional **`q`** for free-text filter on email, username, phone, or id.
 
 ### Cloudflare Workers v1 (`cloudflare_full`)
 

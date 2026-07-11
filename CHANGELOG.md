@@ -2,6 +2,12 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
+## [0.6.3] - 2026-07-11
+
+### Added
+
+- **`searchUsers` optional `q`** — named parameter filters email, username, phone, or id (case-insensitive contains). Parity with engine GraphQL and `js-admin-sdk`.
+
 ## [0.6.2] - 2026-07-09
 
 ### Added

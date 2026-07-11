@@ -46,7 +46,7 @@ final session = await client.loginUser(LoginUserParams(
 ));
 
 // Pro SaaS user admin — pass tenantId on search/create/update (GraphQL tenant_id)
-final users = await client.searchUsers('...', tenantId: 'catalog-tenant-id');
+final users = await client.searchUsers('...', tenantId: 'catalog-tenant-id', q: 'alice@');
 final user = await client.createUser(
   '...',
   CreateUserParams(

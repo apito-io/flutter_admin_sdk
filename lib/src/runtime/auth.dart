@@ -119,16 +119,17 @@ extension ApitoAuth on ApitoClient {
     return GoogleOAuthStateResponse(state: state);
   }
 
-  /// Search project end-users.
+  /// Search project end-users. Optional [q] filters email, username, phone, or id.
   Future<UsersResponse> searchUsers(
     String projectId, {
     int? limit,
     int? offset,
     String? tenantId,
+    String? q,
   }) async {
     const query = r'''
-      query SearchUsers($project_id: String!, $limit: Int, $offset: Int, $tenant_id: String) {
-        searchUsers(project_id: $project_id, limit: $limit, offset: $offset, tenant_id: $tenant_id) {
+      query SearchUsers($project_id: String!, $limit: Int, $offset: Int, $tenant_id: String, $q: String) {
+        searchUsers(project_id: $project_id, limit: $limit, offset: $offset, tenant_id: $tenant_id, q: $q) {
           count
           users {
             id email phone role provider tenant_id status created_at updated_at
@@ -141,6 +142,8 @@ extension ApitoAuth on ApitoClient {
     if (offset != null) variables['offset'] = offset;
     final tid = (tenantId ?? '').trim();
     if (tid.isNotEmpty) variables['tenant_id'] = tid;
+    final needle = (q ?? '').trim();
+    if (needle.isNotEmpty) variables['q'] = needle;
     final data = await execute(query, variables: variables);
     final raw = data['searchUsers'] as Map<String, dynamic>?;
     if (raw == null) throw ApitoError('Invalid response format for searchUsers');

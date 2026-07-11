@@ -67,6 +67,26 @@ void main() {
       expect(payload['query'], contains('tenant_id'));
     });
 
+    test('searchUsers sends q when set', () async {
+      await client.searchUsers(
+        'proj',
+        limit: 10,
+        tenantId: 'tenant-abc',
+        q: 'alice',
+      );
+      final payload = jsonDecode(httpClient.lastBody!) as Map<String, dynamic>;
+      final vars = payload['variables'] as Map<String, dynamic>;
+      expect(vars['q'], 'alice');
+      expect(payload['query'], contains(r'$q: String'));
+    });
+
+    test('searchUsers omits empty q', () async {
+      await client.searchUsers('proj', limit: 10, tenantId: 'tenant-abc');
+      final payload = jsonDecode(httpClient.lastBody!) as Map<String, dynamic>;
+      final vars = payload['variables'] as Map<String, dynamic>;
+      expect(vars.containsKey('q'), isFalse);
+    });
+
     test('createUser sends tenant_id from params.tenantId', () async {
       await client.createUser(
         'proj',
