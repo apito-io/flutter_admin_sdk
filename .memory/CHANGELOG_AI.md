@@ -4,6 +4,11 @@ Not git history — the *reasoning* behind changes. Newest on top.
 Format per entry: date, **Changed**, **Why**, **Affected**.
 
 ---
+## 2026-07-13
+- **Changed:** Documented full tenant catalog surface; `searchTenants` validation (`projectId` required); v0.6.4. `/sync-sdk-all apply flutter`.
+- **Why:** `searchTenants` shipped in tenant-parity session but CONTRACT/CHANGELOG lagged; Kisti `BillingTenantService` depends on it.
+- **Affected:** `auth.dart`, `pubspec.yaml`, `CHANGELOG.md`, `CONTRACT.md`, `README.md`, `SYNC_SUMMARY.md`, `test/tenant_catalog_test.dart`
+
 ## 2026-07-09
 - **Changed:** `buildWhereJson` — `between` and `nbetween` in `_operatorKeys`; test in `filter_test.dart`. Reports module (`food_order_report_summary`, `ledger_report_summary`, date range helpers).
 - **Why:** Rosna Order Report hung on Apito error `date: between requires two values` — SDK was rewriting `between: [start,end]` to `between: {eq: [start,end]}`.

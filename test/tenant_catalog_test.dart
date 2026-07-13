@@ -30,5 +30,12 @@ void main() {
         throwsA(isA<ApitoError>()),
       );
     });
+
+    test('searchTenants requires projectId', () async {
+      expect(
+        client.searchTenants(''),
+        throwsA(isA<ApitoError>()),
+      );
+    });
   });
 }

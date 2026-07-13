@@ -38,6 +38,8 @@ final listing = await client.listFiles(limit: 50);
 
 // Users / tenants (system GraphQL). Google login may link verified email to an existing user.
 final token = await client.generateTenantToken(tenantId);
+final catalog = await client.searchTenants('project-id', limit: 20, q: 'acme');
+final created = await client.createTenant(CreateTenantParams(name: 'Acme', data: '{"owner_uid":"uid"}'));
 final session = await client.loginUser(LoginUserParams(
   projectId: '...',
   tenantId: 'catalog-tenant-id', // required for SaaS per-tenant separate DB

@@ -38,7 +38,9 @@ Reference output: `example/lib/generated/operations/loan.graphql`.
 All SDKs expose:
 - **GraphQL CRUD** (secured endpoint chainable builder + system fallback)
 - **REST storage**: `uploadFile`, `listFiles`, `deleteFiles` at `/files/upload|list|delete`
-- **Auth/admin**: `generateTenantToken`, `loginUser`, `googleOAuthState`, `searchUsers`, `searchTenantsByDomain`, `createUser`, `updateUser`, `resetUserPassword`, `deleteUser`
+- **Auth/admin**: `generateTenantToken`, `getTenants`, `searchTenants`, `createTenant`, `updateTenant`, `deleteTenant`, `loginUser`, `googleOAuthState`, `searchUsers`, `searchTenantsByDomain`, `createUser`, `updateUser`, `resetUserPassword`, `deleteUser`
+
+Pro SaaS **tenant catalog** lifecycle uses system GraphQL methods above — not secured dynamic model roots on the `tenant` model.
 
 Pro SaaS user ops accept optional **`tenantId`** / GraphQL `tenant_id` on `searchUsers`, `createUser`, and `updateUser` (in addition to `loginUser`). Omit on general projects. **`searchUsers`** also accepts optional **`q`** for free-text filter on email, username, phone, or id.
 

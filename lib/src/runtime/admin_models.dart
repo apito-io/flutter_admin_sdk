@@ -110,6 +110,13 @@ class UsersResponse {
   final int count;
 }
 
+class SearchTenantsResponse {
+  const SearchTenantsResponse({required this.tenants, required this.count});
+
+  final List<TenantCatalogSearchRow> tenants;
+  final int count;
+}
+
 class TenantCatalogSearchRow {
   const TenantCatalogSearchRow({
     required this.id,
