@@ -184,6 +184,48 @@ extension ApitoAuth on ApitoClient {
     );
   }
 
+  /// Search SaaS catalog tenants with optional text filter and status filter (system GraphQL only).
+  /// [status]: active (default), deleted, or all.
+  Future<SearchTenantsResponse> searchTenants(
+    String projectId, {
+    int? limit,
+    int? offset,
+    String? q,
+    String? status,
+  }) async {
+    final pid = projectId.trim();
+    if (pid.isEmpty) throw ApitoError('projectId is required');
+    const query = r'''
+      query SearchTenants($project_id: String!, $limit: Int, $offset: Int, $q: String, $status: String) {
+        searchTenants(project_id: $project_id, limit: $limit, offset: $offset, q: $q, status: $status) {
+          count
+          tenants {
+            id name status domain icon data created_at
+          }
+        }
+      }
+    ''';
+    final variables = <String, dynamic>{'project_id': pid};
+    if (limit != null) variables['limit'] = limit;
+    if (offset != null) variables['offset'] = offset;
+    final needle = (q ?? '').trim();
+    if (needle.isNotEmpty) variables['q'] = needle;
+    final statusFilter = (status ?? '').trim();
+    if (statusFilter.isNotEmpty) variables['status'] = statusFilter;
+    final data = await execute(query, variables: variables);
+    final raw = data['searchTenants'] as Map<String, dynamic>?;
+    if (raw == null) {
+      throw ApitoError('Invalid response format for searchTenants');
+    }
+    final tenants = (raw['tenants'] as List<dynamic>? ?? [])
+        .map((e) => TenantCatalogSearchRow.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return SearchTenantsResponse(
+      tenants: tenants,
+      count: (raw['count'] as num?)?.toInt() ?? tenants.length,
+    );
+  }
+
   /// List SaaS catalog tenants (system GraphQL only).
   Future<GetTenantsResponse> getTenants() async {
     const query = r'''
@@ -257,7 +299,7 @@ extension ApitoAuth on ApitoClient {
     return TenantCatalogSearchRow.fromJson(row);
   }
 
-  /// Hard-delete a catalog tenant row.
+  /// Soft-delete a catalog tenant row (status=deleted).
   Future<bool> deleteTenant(String tenantId) async {
     final tid = tenantId.trim();
     if (tid.isEmpty) throw ApitoError('tenantId is required');

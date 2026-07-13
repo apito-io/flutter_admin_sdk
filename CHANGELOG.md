@@ -2,6 +2,20 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
+## [0.6.5] - 2026-07-13
+
+### Changed
+
+- **`deleteTenant`** — soft delete only (`status=deleted`); content and mirror remain until Console hard delete.
+- **`searchTenants`** — optional `status` named parameter (`active`, `deleted`, `all`).
+
+## [0.6.4] - 2026-07-13
+
+### Added
+
+- **`searchTenants(projectId, {limit, offset, q, status})`** — paginated SaaS catalog search with `SearchTenantsResponse` (`tenants`, `count`). Optional `status`: `active` (default), `deleted`, or `all`. Parity with engine system GraphQL and `js-admin-sdk` / `go-admin-sdk`.
+- **Tenant catalog lifecycle** — `getTenants`, `createTenant`, `updateTenant`, `deleteTenant` (soft delete) are **system GraphQL only**; do not use secured model CRUD (`tenantList` / generated `createTenant`) for catalog provisioning after tenant user-parity.
+
 ## [0.6.3] - 2026-07-11
 
 ### Added
