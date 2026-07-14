@@ -4,19 +4,20 @@
 - (check submodule `git branch` before push)
 
 ## Done
-- `lib/src/reports/` — `food_order_report_summary`, `ledger_report_summary`, `report_date_range`, `food_name_lookup`; exported via `lib/reports.dart`; tests in `test/reports_test.dart`
-- **`buildWhereJson` fix:** `between` and `nbetween` added to `_operatorKeys` so `.where({'date': {'between': [a,b]}})` passes through correctly
-- Unit test in `test/filter_test.dart` for `between` passthrough
+- **v0.6.6 (2026-07-14):** `getTenant(projectId, tenantId, {status})`; CONTRACT/CHANGELOG/SYNC_SUMMARY + tests
+- Earlier v0.6.4/5: tenant catalog docs + `searchTenants` validation
+- `lib/src/reports/` — food/ledger report summaries; `buildWhereJson` `between`/`nbetween` fix
 
 ## Broken / watch
-- Any client using `.where({... 'between': [...]})` before this fix sent invalid GraphQL — verify consumers after SDK bump
+- Any client using `.where({... 'between': [...]})` before the between fix sent invalid GraphQL — verify consumers after SDK bump
+- getTenant consumers must not put system keys on device (Rosna uses Worker BFF)
 
 ## Next
-- Bump/version sync if monorepo release workflow requires it (`apito-release-sync` skill)
-- Rosna app to adopt codegen where filters are hand-built
+- Version sync / tag if release workflow requires (`apito-release-sync`)
+- Rosna/Kisti adopt getTenant paths (kisti billing already; rosna via Worker)
 
 ## Do not touch
 - Don't break open-core vs pro field naming contracts without schema-hook pattern
 
 ## Last Updated
-2026-07-09
+2026-07-14

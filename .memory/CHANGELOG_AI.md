@@ -4,6 +4,11 @@ Not git history — the *reasoning* behind changes. Newest on top.
 Format per entry: date, **Changed**, **Why**, **Affected**.
 
 ---
+## 2026-07-14
+- **Changed:** v0.6.6 — `getTenant(projectId, tenantId, {status})`; CONTRACT/CHANGELOG/SYNC_SUMMARY + tests.
+- **Why:** Close getTenant parity with JS/Go; Kisti/Rosna consumers replace searchTenants exact-id loops.
+- **Affected:** `lib/src/runtime/auth.dart`, `pubspec.yaml`, `CHANGELOG.md`, `CONTRACT.md`, `SYNC_SUMMARY.md`, `test/tenant_catalog_test.dart`
+
 ## 2026-07-13
 - **Changed:** Documented full tenant catalog surface; `searchTenants` validation (`projectId` required); v0.6.4. `/sync-sdk-all apply flutter`.
 - **Why:** `searchTenants` shipped in tenant-parity session but CONTRACT/CHANGELOG lagged; Kisti `BillingTenantService` depends on it.
@@ -19,4 +24,4 @@ Format per entry: date, **Changed**, **Why**, **Affected**.
 - **Why:** Cross-LLM durable knowledge + working memory.
 - **Affected:** this repo only.
 
-Last Updated: 2026-07-06
+Last Updated: 2026-07-14
