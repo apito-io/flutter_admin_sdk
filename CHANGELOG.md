@@ -2,6 +2,12 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
+## [0.6.6] - 2026-07-14
+
+### Added
+
+- **`getTenant(projectId, tenantId, {status})`** — load one SaaS catalog tenant by exact id via `searchTenants` (default `status`: `active`). Returns `null` when no exact id match. Parity with `js-admin-sdk` and `go-admin-sdk`.
+
 ## [0.6.5] - 2026-07-13
 
 ### Changed

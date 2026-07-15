@@ -9,7 +9,8 @@ See [CONTRACT.md](CONTRACT.md) for naming vectors, introspection snapshot locati
 
 ## v0.6.4 (2026-07-13)
 
-- **`searchTenants`** — paginated catalog search + `SearchTenantsResponse`; full tenant catalog surface documented (`getTenants`, CRUD, `searchTenantsByDomain`)
+- **`searchTenants`** — paginated catalog search + `SearchTenantsResponse`; full tenant catalog surface documented (`getTenants`, `getTenant`, CRUD, `searchTenantsByDomain`)
+- **`getTenant`** — exact-id catalog lookup (0.6.6); wraps `searchTenants`
 - **Tenant user-parity** — catalog lifecycle is system GraphQL only (not secured `tenant` model CRUD)
 
 ## v0.6.3 (2026-07-11)

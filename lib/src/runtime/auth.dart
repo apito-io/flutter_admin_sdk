@@ -226,6 +226,31 @@ extension ApitoAuth on ApitoClient {
     );
   }
 
+  /// Load one SaaS catalog tenant by exact id (system GraphQL only).
+  /// Uses [searchTenants] with `q` = [tenantId]; returns null when no exact id match.
+  /// [status] defaults to `active`.
+  Future<TenantCatalogSearchRow?> getTenant(
+    String projectId,
+    String tenantId, {
+    String? status,
+  }) async {
+    final pid = projectId.trim();
+    final tid = tenantId.trim();
+    if (pid.isEmpty) throw ApitoError('projectId is required');
+    if (tid.isEmpty) throw ApitoError('tenantId is required');
+    final res = await searchTenants(
+      pid,
+      limit: 5,
+      offset: 0,
+      q: tid,
+      status: (status ?? 'active').trim().isEmpty ? 'active' : status,
+    );
+    for (final row in res.tenants) {
+      if (row.id.trim() == tid) return row;
+    }
+    return null;
+  }
+
   /// List SaaS catalog tenants (system GraphQL only).
   Future<GetTenantsResponse> getTenants() async {
     const query = r'''

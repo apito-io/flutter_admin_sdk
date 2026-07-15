@@ -37,5 +37,16 @@ void main() {
         throwsA(isA<ApitoError>()),
       );
     });
+
+    test('getTenant requires projectId and tenantId', () async {
+      expect(
+        client.getTenant('', 'tid'),
+        throwsA(isA<ApitoError>()),
+      );
+      expect(
+        client.getTenant('proj', ''),
+        throwsA(isA<ApitoError>()),
+      );
+    });
   });
 }
