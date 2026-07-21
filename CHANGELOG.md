@@ -2,6 +2,15 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
+## [Unreleased]
+
+## [0.6.7] - 2026-07-21
+
+### Changed
+
+- **Canonical project scope** — project headers now use `X-Apito-Project-Id`. Runtime calls that accept `projectId` pass the same value as a per-request header override, alongside explicit tenant context where applicable.
+- **Unified `apt_` access tokens (hard cut)** — `buildHeaders` sends `apt_` tokens as `Authorization: Bearer` + `X-Use-Cookies: false` only; dropped the compatibility `X-Apito-Key` dual header. Legacy `cli-`/`sdk-`/`mcp-` prefixed keys now throw `ArgumentError('TOKEN_FORMAT_RETIRED…')` instead of being sent to the engine.
+
 ## [0.6.6] - 2026-07-14
 
 ### Added

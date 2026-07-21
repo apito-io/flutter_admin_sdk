@@ -24,25 +24,39 @@ class ApitoClient {
 
   QueryBuilder from(String model) => QueryBuilder(client: this, model: model);
 
-  Map<String, String> buildHeaders() {
+  Map<String, String> buildHeaders({String? projectId, String? tenantId}) {
     final headers = <String, String>{'Content-Type': 'application/json'};
-    if (_config.useBearerAuth || (_config.authToken?.isNotEmpty ?? false)) {
-      final token = _config.authToken ?? _config.apiKey;
-      if (token.isNotEmpty) headers['Authorization'] = 'Bearer $token';
-    } else if (_config.apiKey.isNotEmpty) {
-      if (_config.apiKey.startsWith('cli-') || _config.apiKey.startsWith('sdk-')) {
-        headers['X-Apito-Sync-Key'] = _config.apiKey;
-      } else {
-        headers['X-Apito-Key'] = _config.apiKey;
+    final key =
+        (_config.accessToken ?? _config.authToken ?? _config.apiKey).trim();
+    if (key.startsWith('cli-') ||
+        key.startsWith('sdk-') ||
+        key.startsWith('mcp-')) {
+      throw ArgumentError(
+        'TOKEN_FORMAT_RETIRED: cli-/sdk-/mcp- prefixed keys are no longer accepted. '
+        'Generate a unified apt_ access token in Console → Access Token and pass it as accessToken.',
+      );
+    }
+    if (_config.useBearerAuth ||
+        (_config.authToken?.isNotEmpty ?? false) ||
+        (_config.accessToken?.isNotEmpty ?? false) ||
+        key.startsWith('apt_')) {
+      // Unified apt_ access token: Authorization: Bearer only. X-Use-Cookies:
+      // false tells the engine this is a headless API call (no browser
+      // session cookies). Hard cut — no compatibility X-Apito-Key fallback.
+      if (key.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $key';
+        headers['X-Use-Cookies'] = 'false';
       }
+    } else if (key.isNotEmpty) {
+      headers['X-Apito-Key'] = key;
     }
-    final tenantId = _config.tenantId;
-    if (tenantId != null && tenantId.isNotEmpty) {
-      headers['X-Apito-Tenant-ID'] = tenantId;
+    final effectiveTenantId = (tenantId ?? _config.tenantId)?.trim();
+    if (effectiveTenantId != null && effectiveTenantId.isNotEmpty) {
+      headers['X-Apito-Tenant-ID'] = effectiveTenantId;
     }
-    final projectId = _config.projectId;
-    if (projectId != null && projectId.isNotEmpty) {
-      headers['X-Apito-Project-ID'] = projectId;
+    final effectiveProjectId = (projectId ?? _config.projectId)?.trim();
+    if (effectiveProjectId != null && effectiveProjectId.isNotEmpty) {
+      headers['X-Apito-Project-Id'] = effectiveProjectId;
     }
     return headers;
   }
@@ -50,10 +64,12 @@ class ApitoClient {
   Future<Map<String, dynamic>> execute(
     String document, {
     Map<String, dynamic>? variables,
+    String? projectId,
+    String? tenantId,
   }) async {
     final response = await _http.post(
       Uri.parse(_config.endpoint),
-      headers: buildHeaders(),
+      headers: buildHeaders(projectId: projectId, tenantId: tenantId),
       body: jsonEncode({'query': document, 'variables': variables ?? {}}),
     );
 

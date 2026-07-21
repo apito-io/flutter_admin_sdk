@@ -1,11 +1,19 @@
 # Flutter Admin SDK — Cross-SDK Sync Summary
 
-**Package:** `flutter_admin_sdk` (v0.6.4)  
-**Aligned with:** `js-admin-sdk` v3.8.0, `go-admin-sdk` v2.6.3
+**Package:** `flutter_admin_sdk` (v0.6.7)  
+**Aligned with:** `js-admin-sdk` v3.11.0, `go-admin-sdk` v2.6.6
 
 ## Shared contract
 
 See [CONTRACT.md](CONTRACT.md) for naming vectors, introspection snapshot locations, 5-operation doc format, admin client surface, and codegen outputs.
+
+## Unreleased (2026-07-21)
+
+- **Canonical project scope** — `X-Apito-Project-Id` only (no aliases). Config `projectId` and methods that accept `projectId` send matching per-request headers.
+
+## v0.6.7 (2026-07-20)
+
+- **Unified `apt_` access tokens (hard cut)** — `buildHeaders` sends `apt_` tokens as `Authorization: Bearer` + `X-Use-Cookies: false` only; dropped the compatibility `X-Apito-Key` dual header. Legacy `cli-`/`sdk-`/`mcp-` prefixed keys now throw `ArgumentError('TOKEN_FORMAT_RETIRED…')` from `buildHeaders` instead of being sent to the engine.
 
 ## v0.6.4 (2026-07-13)
 

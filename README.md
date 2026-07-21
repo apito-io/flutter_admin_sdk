@@ -13,6 +13,7 @@ final client = ApitoClient(
   config: ApitoConfig(
     endpoint: 'http://localhost:5050/secured/graphql',
     apiKey: 'your-key',
+    projectId: 'project-id', // Optional default → X-Apito-Project-Id
     tenantId: 'tenant-id',
   ),
 );

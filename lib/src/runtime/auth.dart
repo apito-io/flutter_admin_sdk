@@ -89,7 +89,12 @@ extension ApitoAuth on ApitoClient {
         }
       }
     ''';
-    final data = await execute(query, variables: variables);
+    final data = await execute(
+      query,
+      variables: variables,
+      projectId: params.projectId,
+      tenantId: tenantId,
+    );
     final raw = data['loginUser'] as Map<String, dynamic>?;
     final token = raw?['token'] as String?;
     if (token == null || token.isEmpty) {
@@ -110,7 +115,11 @@ extension ApitoAuth on ApitoClient {
         googleOAuthState(project_id: $project_id) { state }
       }
     ''';
-    final data = await execute(query, variables: {'project_id': projectId});
+    final data = await execute(
+      query,
+      variables: {'project_id': projectId},
+      projectId: projectId,
+    );
     final state =
         ((data['googleOAuthState'] as Map?)?['state'] as String?)?.trim() ?? '';
     if (state.isEmpty) {
@@ -144,9 +153,15 @@ extension ApitoAuth on ApitoClient {
     if (tid.isNotEmpty) variables['tenant_id'] = tid;
     final needle = (q ?? '').trim();
     if (needle.isNotEmpty) variables['q'] = needle;
-    final data = await execute(query, variables: variables);
+    final data = await execute(
+      query,
+      variables: variables,
+      projectId: projectId,
+      tenantId: tid,
+    );
     final raw = data['searchUsers'] as Map<String, dynamic>?;
-    if (raw == null) throw ApitoError('Invalid response format for searchUsers');
+    if (raw == null)
+      throw ApitoError('Invalid response format for searchUsers');
     final users = (raw['users'] as List<dynamic>? ?? [])
         .map((u) => ApitoUser.fromJson(u as Map<String, dynamic>))
         .toList();
@@ -168,10 +183,14 @@ extension ApitoAuth on ApitoClient {
         }
       }
     ''';
-    final data = await execute(query, variables: {
-      'project_id': projectId,
-      'domain': domain,
-    });
+    final data = await execute(
+      query,
+      variables: {
+        'project_id': projectId,
+        'domain': domain,
+      },
+      projectId: projectId,
+    );
     final raw = data['searchTenantsByDomain'] as Map<String, dynamic>?;
     if (raw == null) {
       throw ApitoError('Invalid response format for searchTenantsByDomain');
@@ -212,7 +231,11 @@ extension ApitoAuth on ApitoClient {
     if (needle.isNotEmpty) variables['q'] = needle;
     final statusFilter = (status ?? '').trim();
     if (statusFilter.isNotEmpty) variables['status'] = statusFilter;
-    final data = await execute(query, variables: variables);
+    final data = await execute(
+      query,
+      variables: variables,
+      projectId: pid,
+    );
     final raw = data['searchTenants'] as Map<String, dynamic>?;
     if (raw == null) {
       throw ApitoError('Invalid response format for searchTenants');
@@ -368,7 +391,12 @@ extension ApitoAuth on ApitoClient {
     final tenantId = (params.tenantId ?? '').trim();
     if (tenantId.isNotEmpty) variables['tenant_id'] = tenantId;
 
-    final data = await execute(query, variables: variables);
+    final data = await execute(
+      query,
+      variables: variables,
+      projectId: projectId,
+      tenantId: tenantId,
+    );
     final u = data['createUser'] as Map<String, dynamic>?;
     if (u == null || (u['id'] as String?)?.isEmpty != false) {
       throw ApitoError('Invalid response format for createUser');
