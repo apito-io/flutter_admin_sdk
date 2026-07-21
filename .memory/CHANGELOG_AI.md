@@ -4,6 +4,12 @@ Not git history — the *reasoning* behind changes. Newest on top.
 Format per entry: date, **Changed**, **Why**, **Affected**.
 
 ---
+## 2026-07-21
+- **Changed:** Standardized project scope on `X-Apito-Project-Id`; explicit
+  project methods now override configured project scope per request.
+- **Why:** Keep GraphQL variables and `apt_` authorization scope aligned.
+- **Affected:** runtime client/auth, header tests, README/changelog.
+
 ## 2026-07-14
 - **Changed:** v0.6.6 — `getTenant(projectId, tenantId, {status})`; CONTRACT/CHANGELOG/SYNC_SUMMARY + tests.
 - **Why:** Close getTenant parity with JS/Go; Kisti/Rosna consumers replace searchTenants exact-id loops.
@@ -24,4 +30,4 @@ Format per entry: date, **Changed**, **Why**, **Affected**.
 - **Why:** Cross-LLM durable knowledge + working memory.
 - **Affected:** this repo only.
 
-Last Updated: 2026-07-14
+Last Updated: 2026-07-21
