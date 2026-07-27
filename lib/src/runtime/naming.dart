@@ -79,6 +79,15 @@ void reservedCheck(String canonical) {
 String canonicalizeModelName(String raw) {
   final t = raw.trim();
   if (t.isEmpty) throw ArgumentError('model name is required');
+  // Already-canonical ids skip run-on rejection (long singles like "indication").
+  if (_canonicalIdRe.hasMatch(t)) {
+    final parts = t.split('_').where((p) => p.isNotEmpty).toList();
+    parts[parts.length - 1] = singularizeSegment(parts.last);
+    final out = parts.join('_');
+    if (!_canonicalIdRe.hasMatch(out)) throw ArgumentError('invalid model name');
+    reservedCheck(out);
+    return out;
+  }
   rejectRunOnLowercaseConcat(t);
   final segments = splitIntoWordSegments(t);
   if (segments.isEmpty) throw ArgumentError('invalid model name');

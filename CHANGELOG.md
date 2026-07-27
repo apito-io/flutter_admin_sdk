@@ -4,6 +4,12 @@ All notable changes to `flutter_admin_sdk` are documented here.
 
 ## [Unreleased]
 
+## [0.6.8] - 2026-07-27
+
+### Fixed
+
+- **`canonicalizeModelName`** — already-canonical snake_case ids skip run-on rejection (parity with open-core 1.8.5; `indication` / `practitioner`).
+
 ## [0.6.7] - 2026-07-21
 
 ### Changed

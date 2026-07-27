@@ -38,6 +38,10 @@ void main() {
       expect(canonicalizeModelName('foodOrder'), 'food_order');
       expect(canonicalizeModelName('food_orders'), 'food_order');
     });
+    test('accepts already-canonical long singles', () {
+      expect(canonicalizeModelName('indication'), 'indication');
+      expect(canonicalizeModelName('practitioner'), 'practitioner');
+    });
     test('rejects run-on', () {
       expect(() => canonicalizeModelName('foodorder'), throwsArgumentError);
     });

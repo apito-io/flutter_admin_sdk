@@ -4,6 +4,14 @@ Not git history — the *reasoning* behind changes. Newest on top.
 Format per entry: date, **Changed**, **Why**, **Affected**.
 
 ---
+## 2026-07-27 — v0.6.8 canonicalize long model ids
+
+- **Changed:** canonicalizeModelName skips run-on for already-canonical ids.
+- **Why:** Parity with open-core 1.8.5 / JS 3.11.6.
+- **Affected:** `lib/src/runtime/naming.dart`, tests. Version **0.6.8**.
+
+---
+
 ## 2026-07-21
 - **Changed:** Standardized project scope on `X-Apito-Project-Id`; explicit
   project methods now override configured project scope per request.
