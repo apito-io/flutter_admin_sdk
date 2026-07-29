@@ -1,3 +1,11 @@
+## 2026-07-28 — nested GraphQL snake (no mapping)
+
+- **Changed:** Adopt snake nested relation keys; drop camel↔snake alias/connect maps; Refine resources use stored model ids where applicable.
+- **Why:** Engine nested GraphQL is snake; only roots stay camel.
+- **Affected:** connectionFields, connect forms, resource config, SDK naming helpers.
+
+---
+
 # flutter_admin_sdk — AI Changelog
 
 Not git history — the *reasoning* behind changes. Newest on top.
