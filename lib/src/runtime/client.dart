@@ -36,11 +36,15 @@ class ApitoClient {
         'Generate a unified apt_ access token in Console → Access Token and pass it as accessToken.',
       );
     }
-    if (_config.useBearerAuth ||
+    // Match js-admin-sdk createBearerApitoFetcher: ak_ → X-Apito-Key; apt_/JWT → Bearer.
+    // Staff login still returns legacy ak_ session keys — never force Bearer for those.
+    if (key.startsWith('ak_')) {
+      headers['X-Apito-Key'] = key;
+    } else if (_config.useBearerAuth ||
         (_config.authToken?.isNotEmpty ?? false) ||
         (_config.accessToken?.isNotEmpty ?? false) ||
         key.startsWith('apt_')) {
-      // Unified apt_ access token: Authorization: Bearer only. X-Use-Cookies:
+      // Unified apt_ access token / JWT: Authorization: Bearer only. X-Use-Cookies:
       // false tells the engine this is a headless API call (no browser
       // session cookies). Hard cut — no compatibility X-Apito-Key fallback.
       if (key.isNotEmpty) {
@@ -181,6 +185,27 @@ class ApitoClient {
 
     final doc = data['upsertModelData'] as Map<String, dynamic>;
     return ApitoRecord.fromGraphql(doc);
+  }
+
+  /// System GraphQL fallback: delete via `deleteModelData`.
+  Future<void> deleteModelSystem({
+    required String modelName,
+    required String id,
+  }) async {
+    const mutation = r'''
+      mutation DeleteModelData($model_name: String!, $_id: String) {
+        deleteModelData(model_name: $model_name, _id: $_id) {
+          id
+        }
+      }
+    ''';
+
+    final data = await execute(mutation, variables: {
+      'model_name': modelName,
+      '_id': id,
+    });
+    // Already-gone docs return null without throwing in some engines; treat as success.
+    data['deleteModelData'];
   }
 
   void close() => _http.close();

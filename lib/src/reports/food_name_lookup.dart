@@ -49,7 +49,7 @@ Map<String, String> buildFoodNameLookupFromOrders(
 ) {
   final lookup = <String, String>{};
   for (final order in orders) {
-    final foodList = order['foodList'];
+    final foodList = order['food_list'] ?? order['foodList'];
     if (foodList is! List) continue;
     for (final food in foodList) {
       if (food is! Map) continue;

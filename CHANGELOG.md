@@ -2,7 +2,20 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
-## [Unreleased]
+## [0.6.9] - 2026-07-29
+
+### Changed
+
+- **Nested GraphQL relation keys are snake_case** — connection field helpers emit
+  `food_category` / `food_category_list`. Root list ops remain lowerCamel
+  (`foodCategoryList`). Report helpers read `food_list` and `transaction_category`
+  (with camel fallback for older payloads).
+- **Staff `ak_` session keys** — `buildHeaders` sends `ak_` as `X-Apito-Key`;
+  `apt_` / JWT continue as Bearer only.
+
+### Added
+
+- **`deleteModelSystem`** — system GraphQL fallback delete via `deleteModelData`.
 
 ## [0.6.8] - 2026-07-27
 

@@ -10,7 +10,7 @@ class LedgerTransactionForSummary {
 
   factory LedgerTransactionForSummary.fromMap(Map<String, dynamic> map) {
     final data = map['data'];
-    final category = map['transactionCategory'];
+    final category = map['transaction_category'] ?? map['transactionCategory'];
     String? categoryName;
     if (category is Map) {
       final catData = category['data'];

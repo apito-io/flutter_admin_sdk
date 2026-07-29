@@ -168,21 +168,26 @@ String apitoConnectionFieldNameForRelation(
   String relatedModelRef,
   String relation,
 ) {
+  final key = apitoStoredSnakeModelId(relatedModelRef);
   if (relation == 'has_many') {
-    return apitoMultipleResourceName(relatedModelRef);
+    return '${key}_list';
   }
-  return apitoSingularResourceName(relatedModelRef);
+  return key;
 }
 
 String apitoGraphqlConnectionFieldFromMetaKey(String key) {
   final k = key.trim();
   if (k.isEmpty) return k;
-  if (k.contains('_')) return apitoSingularResourceName(k);
+  if (RegExp(r'_list$', caseSensitive: false).hasMatch(k)) {
+    final base = k.replaceFirst(RegExp(r'_list$', caseSensitive: false), '');
+    return '${apitoStoredSnakeModelId(base)}_list';
+  }
   if (RegExp(r'List$', caseSensitive: false).hasMatch(k) &&
       !RegExp(r'ListCount$', caseSensitive: false).hasMatch(k)) {
-    return k[0].toLowerCase() + k.substring(1);
+    final base = k.replaceFirst(RegExp(r'List$', caseSensitive: false), '');
+    return '${apitoStoredSnakeModelId(base)}_list';
   }
-  return apitoSingularResourceName(k);
+  return apitoStoredSnakeModelId(k);
 }
 
 String apitoGraphQLTypeNameForFilterArg(String modelId) => listGraphQLTypeName(modelId);

@@ -113,21 +113,21 @@ void main() {
   });
 
   group('formatApitoConnectionSubselections', () {
-    test('normalizes legacy snake alias target to camelCase field', () {
+    test('normalizes legacy snake alias target to snake nested field', () {
       final s = formatApitoConnectionSubselections(
         {'foodCategory': 'id data { name }'},
         {'foodCategory': 'food_category'},
       );
-      expect(s, contains('foodCategory {'));
-      expect(s, isNot(contains('food_category')));
+      expect(s, contains('foodCategory: food_category {'));
+      expect(s, isNot(contains('foodCategory {')));
     });
 
     test('collapses redundant alias when response key matches schema field', () {
       final s = formatApitoConnectionSubselections(
-        {'foodCategory': 'id'},
-        {'foodCategory': 'foodCategory'},
+        {'food_category': 'id'},
+        {'food_category': 'foodCategory'},
       );
-      expect(s.trim(), 'foodCategory { id }');
+      expect(s.trim(), 'food_category { id }');
     });
 
     test('keeps distinct response key vs schema field', () {
@@ -135,17 +135,18 @@ void main() {
         {'cat': 'id'},
         {'cat': 'foodCategory'},
       );
-      expect(s.trim(), 'cat: foodCategory { id }');
+      expect(s.trim(), 'cat: food_category { id }');
     });
 
     test('normalizes connectionFields key without alias map', () {
       final s = formatApitoConnectionSubselections({'food_category': 'id'});
-      expect(s.trim(), 'foodCategory { id }');
+      expect(s.trim(), 'food_category { id }');
     });
 
-    test('has_many connection field is model List not singular', () {
-      expect(apitoConnectionFieldNameForRelation('food', 'has_many'), 'foodList');
-      expect(apitoMultipleResourceName('food'), 'foodList');
+    test('has_many connection field is model_id_list not camel List', () {
+      expect(apitoConnectionFieldNameForRelation('food', 'has_many'), 'food_list');
+      expect(apitoConnectionFieldNameForRelation('food_category', 'has_many'), 'food_category_list');
+      expect(apitoMultipleResourceName('food'), 'foodList'); // root op only
     });
   });
 

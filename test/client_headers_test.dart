@@ -4,6 +4,27 @@ import 'package:http/testing.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('buildHeaders sends ak_ via X-Apito-Key even when passed as authToken',
+      () {
+    final client = ApitoClient(
+      config: const ApitoConfig(
+        endpoint: 'http://localhost:5050/secured/graphql',
+        apiKey: '',
+        authToken: 'ak_staff_session',
+        projectId: 'rosna_v2_jpn6o',
+        tenantId: 'tenant_1',
+      ),
+    );
+
+    expect(client.buildHeaders(), {
+      'Content-Type': 'application/json',
+      'X-Apito-Key': 'ak_staff_session',
+      'X-Apito-Tenant-ID': 'tenant_1',
+      'X-Apito-Project-Id': 'rosna_v2_jpn6o',
+    });
+    client.close();
+  });
+
   test('buildHeaders sends project id and ak token like JS SDK', () {
     final client = ApitoClient(
       config: const ApitoConfig(
