@@ -1,3 +1,13 @@
+## 2026-07-29 — v0.6.9 nested-snake connections + report keys
+
+- **Changed:** Nested connection field helpers emit snake; reports read
+  `food_list` / `transaction_category` (camel fallback); `ak_` →
+  `X-Apito-Key`; `deleteModelSystem`; CHANGELOG/pubspec **0.6.9**.
+- **Why:** Match engine nested-snake GraphQL for Rosna mobile.
+- **Affected:** `naming.dart`, `client.dart`, report helpers. Ask before push.
+
+---
+
 ## 2026-07-28 — nested GraphQL snake (no mapping)
 
 - **Changed:** Adopt snake nested relation keys; drop camel↔snake alias/connect maps; Refine resources use stored model ids where applicable.

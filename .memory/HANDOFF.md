@@ -1,25 +1,24 @@
 # flutter_admin_sdk — Handoff
 
 ## Branch
-- (check submodule `git branch` before push)
+
+- `main` @ `git@github.com:apito-io/flutter_admin_sdk.git` — **ahead 1**
+  (`6e56692` release v0.6.9). Ask before push.
 
 ## Done
-- **2026-07-21:** Canonical project header and explicit project-method request
-  overrides; focused header tests plus full Dart test/analyze.
-- **v0.6.6 (2026-07-14):** `getTenant(projectId, tenantId, {status})`; CONTRACT/CHANGELOG/SYNC_SUMMARY + tests
-- Earlier v0.6.4/5: tenant catalog docs + `searchTenants` validation
-- `lib/src/reports/` — food/ledger report summaries; `buildWhereJson` `between`/`nbetween` fix
+
+- **v0.6.9:** Snake nested connection naming; report keys `food_list` /
+  `transaction_category`; auth header routing for `ak_` keys; changelog.
+- Earlier: getTenant, report summaries, between/nbetween fix.
 
 ## Broken / watch
-- Any client using `.where({... 'between': [...]})` before the between fix sent invalid GraphQL — verify consumers after SDK bump
-- getTenant consumers must not put system keys on device (Rosna uses Worker BFF)
+
+- Pre-existing naming test: run-on `foodorder` not rejected.
+- Path-linked apps (rosna-app) pick up local commit without pub publish.
 
 ## Next
-- Version sync / tag if release workflow requires (`apito-release-sync`)
-- Rosna/Kisti adopt getTenant paths (kisti billing already; rosna via Worker)
 
-## Do not touch
-- Don't break open-core vs pro field naming contracts without schema-hook pattern
+1. User confirm → `git push origin main`.
+2. Tag/release sync if required by `apito-release-sync`.
 
-## Last Updated
-2026-07-21
+Last Updated: 2026-07-30
