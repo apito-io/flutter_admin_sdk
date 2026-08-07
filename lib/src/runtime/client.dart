@@ -36,17 +36,17 @@ class ApitoClient {
         'Generate a unified apt_ access token in Console → Access Token and pass it as accessToken.',
       );
     }
-    // Match js-admin-sdk createBearerApitoFetcher: ak_ → X-Apito-Key; apt_/JWT → Bearer.
-    // Staff login still returns legacy ak_ session keys — never force Bearer for those.
+    // Match js-admin-sdk: ak_ → X-Apito-Key; explicit accessToken/authToken → Bearer.
+    // apt_ passed only as apiKey (login bootstrap) stays on X-Apito-Key — some
+    // engine stacks reject Authorization: Bearer for those keys.
     if (key.startsWith('ak_')) {
       headers['X-Apito-Key'] = key;
     } else if (_config.useBearerAuth ||
         (_config.authToken?.isNotEmpty ?? false) ||
-        (_config.accessToken?.isNotEmpty ?? false) ||
-        key.startsWith('apt_')) {
+        (_config.accessToken?.isNotEmpty ?? false)) {
       // Unified apt_ access token / JWT: Authorization: Bearer only. X-Use-Cookies:
       // false tells the engine this is a headless API call (no browser
-      // session cookies). Hard cut — no compatibility X-Apito-Key fallback.
+      // session cookies).
       if (key.isNotEmpty) {
         headers['Authorization'] = 'Bearer $key';
         headers['X-Use-Cookies'] = 'false';
@@ -114,17 +114,39 @@ class ApitoClient {
   }
 
   /// System GraphQL fallback: list via `getModelData`.
+  ///
+  /// Pass [connection] to scope children of a parent document (e.g. all
+  /// `timetable_stop` rows linked to one `train`). Shape matches
+  /// `ListAllDataDetailedOfAModelConnectionPayload`.
   Future<ApitoListResponse> listModelSystem({
     required String modelName,
     Map<String, dynamic>? where,
+    Map<String, dynamic>? connection,
     int page = 1,
     int limit = 200,
   }) async {
     const query = r'''
-      query GetModelData($model: String!, $page: Int, $limit: Int, $where: JSON) {
-        getModelData(model: $model, page: $page, limit: $limit, where: $where) {
+      query GetModelData(
+        $model: String!
+        $page: Int
+        $limit: Int
+        $where: JSON
+        $connection: ListAllDataDetailedOfAModelConnectionPayload
+      ) {
+        getModelData(
+          model: $model
+          page: $page
+          limit: $limit
+          where: $where
+          connection: $connection
+        ) {
           count
-          results { id data meta { created_at updated_at status } }
+          results {
+            id
+            data
+            relation_doc_id
+            meta { created_at updated_at status }
+          }
         }
       }
     ''';
@@ -134,6 +156,7 @@ class ApitoClient {
       'page': page,
       'limit': limit,
       if (where != null && where.isNotEmpty) 'where': where,
+      if (connection != null && connection.isNotEmpty) 'connection': connection,
     });
 
     final block = data['getModelData'] as Map<String, dynamic>? ?? {};

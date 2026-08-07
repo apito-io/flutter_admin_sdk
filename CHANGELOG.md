@@ -2,6 +2,17 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
+## [0.6.10] - 2026-08-07
+
+### Changed
+
+- **Auth headers** — `apt_` passed only as `apiKey` stays on `X-Apito-Key`; Bearer reserved for explicit `accessToken`/`authToken`.
+- **Media field detection** — treat raw `media` type as media in schema reader.
+
+### Added
+
+- **`listModelSystem(connection:)`** — scope system `getModelData` by parent connection; return `relation_doc_id`.
+
 ## [0.6.9] - 2026-07-29
 
 ### Changed

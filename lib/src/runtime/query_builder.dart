@@ -150,6 +150,10 @@ class QueryBuilder {
   QueryBuilder keyCondition(dynamic keyCondition) =>
       _copy(key: keyCondition);
 
+  /// Omit GraphQL `relation` on list/count — for models whose schema has no
+  /// `*_WHERE_RELATION_FILTER_CONDITION` (e.g. nested-only models).
+  QueryBuilder withoutRelation() => _copy(supportsRelation: false);
+
   MutationBuilder insert({required Map<String, dynamic> payload}) {
     return MutationBuilder(
       client: client,

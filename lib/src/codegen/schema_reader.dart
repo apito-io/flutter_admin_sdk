@@ -284,6 +284,9 @@ class SchemaReader {
             (f) {
               final rawType = f['type'] as String? ?? 'string';
               final graphqlType = _simpleTypeToGraphql(rawType);
+              final media = rawType.toLowerCase() == 'media' ||
+                  _isMediaGraphqlType(rawType) ||
+                  _isMediaGraphqlType(graphqlType);
               return ApitoSchemaField(
                 name: f['name'] as String,
                 graphqlType: graphqlType,
@@ -293,8 +296,7 @@ class SchemaReader {
                 enumValues: (f['enum_values'] as List<dynamic>? ?? [])
                     .map((e) => e.toString())
                     .toList(),
-                isMedia:
-                    _isMediaGraphqlType(rawType) || _isMediaGraphqlType(graphqlType),
+                isMedia: media,
               );
             },
           )
