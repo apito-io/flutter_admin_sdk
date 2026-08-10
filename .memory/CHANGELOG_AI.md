@@ -1,3 +1,19 @@
+## 2026-08-09 — Tenant planTier + myTenant
+
+- **Changed:** `planTier` on tenant catalog models/create/update GraphQL;
+  `ApitoClient.myTenant()` for app-user token.
+- **Why:** Protiva plan gating + domain rename; control-plane tier readable
+  without system token in the app.
+- **Affected:** `admin_models.dart`, `auth.dart`. Ask before bump/commit.
+
+## 2026-08-07 — v0.6.10 listModelSystem connection + apt_ header
+
+- **Changed:** `listModelSystem(connection:)`; apt_ apiKey stays
+  `X-Apito-Key`; media raw-type detection. Tag **v0.6.10** pushed.
+- **Why:** Parent-scoped system lists; engine stacks that reject Bearer for
+  apt_ bootstrap keys.
+- **Affected:** `client.dart`, `schema_reader.dart`, `query_builder.dart`.
+
 ## 2026-07-29 — v0.6.9 nested-snake connections + report keys
 
 - **Changed:** Nested connection field helpers emit snake; reports read

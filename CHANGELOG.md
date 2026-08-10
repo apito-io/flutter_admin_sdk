@@ -2,6 +2,15 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
+## [0.6.11] - 2026-08-10
+
+### Added
+
+- **`PlanTier`** parse/rank/`atLeast` (engine `plan_tier` wire values).
+- **`EffectivePermissionsSnapshot`** + `ApitoClient.myEffectivePermissions()` +
+  `EffectivePermissions.can` / `canFromMap` / `graceModels`.
+- **`isPlanQuotaError`** for soft Upgrade UX (no Casbin dependency).
+
 ## [0.6.10] - 2026-08-07
 
 ### Changed

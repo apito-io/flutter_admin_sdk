@@ -49,6 +49,9 @@ extension ApitoAuth on ApitoClient {
     if (tenantId.isNotEmpty) {
       variables['tenant_id'] = tenantId;
     }
+    if (params.signup != null) {
+      variables['signup'] = params.signup;
+    }
 
     if (authMethod == 'google') {
       variables['auth_method'] = 'google';
@@ -80,8 +83,8 @@ extension ApitoAuth on ApitoClient {
     }
 
     const query = r'''
-      query LoginUser($project_id: String!, $tenant_id: String, $password: String, $auth_method: String, $email: String, $phone: String, $code: String, $state: String, $id_token: String) {
-        loginUser(project_id: $project_id, tenant_id: $tenant_id, password: $password, auth_method: $auth_method, email: $email, phone: $phone, code: $code, state: $state, id_token: $id_token) {
+      query LoginUser($project_id: String!, $tenant_id: String, $password: String, $auth_method: String, $email: String, $phone: String, $code: String, $state: String, $id_token: String, $signup: Boolean) {
+        loginUser(project_id: $project_id, tenant_id: $tenant_id, password: $password, auth_method: $auth_method, email: $email, phone: $phone, code: $code, state: $state, id_token: $id_token, signup: $signup) {
           token
           user {
             id email phone role provider tenant_id status created_at updated_at
@@ -179,7 +182,7 @@ extension ApitoAuth on ApitoClient {
     const query = r'''
       query SearchTenantsByDomain($project_id: String!, $domain: String!) {
         searchTenantsByDomain(project_id: $project_id, domain: $domain) {
-          tenant { id name status domain data }
+          tenant { id name status domain plan_tier data }
         }
       }
     ''';
@@ -219,7 +222,7 @@ extension ApitoAuth on ApitoClient {
         searchTenants(project_id: $project_id, limit: $limit, offset: $offset, q: $q, status: $status) {
           count
           tenants {
-            id name status domain icon data created_at
+            id name status domain plan_tier icon data created_at
           }
         }
       }
@@ -279,7 +282,7 @@ extension ApitoAuth on ApitoClient {
     const query = r'''
       query GetTenants {
         getTenants {
-          tenants { id name domain icon data }
+          tenants { id name domain plan_tier icon data }
         }
       }
     ''';
@@ -299,9 +302,9 @@ extension ApitoAuth on ApitoClient {
     final name = params.name.trim();
     if (name.isEmpty) throw ApitoError('name is required');
     const query = r'''
-      mutation CreateTenant($name: String!, $data: String, $domain: String) {
-        createTenant(name: $name, data: $data, domain: $domain) {
-          id name status domain data
+      mutation CreateTenant($name: String!, $data: String, $domain: String, $plan_tier: String) {
+        createTenant(name: $name, data: $data, domain: $domain, plan_tier: $plan_tier) {
+          id name status domain plan_tier data
         }
       }
     ''';
@@ -310,6 +313,8 @@ extension ApitoAuth on ApitoClient {
     if (dataJson.isNotEmpty) variables['data'] = dataJson;
     final domain = (params.domain ?? '').trim();
     if (domain.isNotEmpty) variables['domain'] = domain;
+    final planTier = (params.planTier ?? '').trim();
+    if (planTier.isNotEmpty) variables['plan_tier'] = planTier;
     final data = await execute(query, variables: variables);
     final row = data['createTenant'] as Map<String, dynamic>?;
     if (row == null || (row['id'] as String?)?.isEmpty != false) {
@@ -318,20 +323,23 @@ extension ApitoAuth on ApitoClient {
     return TenantCatalogSearchRow.fromJson(row);
   }
 
-  /// Update catalog tenant name/data/domain.
+  /// Update catalog tenant name/data/domain/plan_tier.
   Future<TenantCatalogSearchRow> updateTenant(
     String tenantId,
     UpdateTenantParams params,
   ) async {
     final tid = tenantId.trim();
     if (tid.isEmpty) throw ApitoError('tenantId is required');
-    if (params.name == null && params.data == null && params.domain == null) {
+    if (params.name == null &&
+        params.data == null &&
+        params.domain == null &&
+        params.planTier == null) {
       throw ApitoError('at least one field must be provided');
     }
     const query = r'''
-      mutation UpdateTenant($tenant_id: String!, $name: String, $data: String, $domain: String) {
-        updateTenant(tenant_id: $tenant_id, name: $name, data: $data, domain: $domain) {
-          id name status domain data
+      mutation UpdateTenant($tenant_id: String!, $name: String, $data: String, $domain: String, $plan_tier: String) {
+        updateTenant(tenant_id: $tenant_id, name: $name, data: $data, domain: $domain, plan_tier: $plan_tier) {
+          id name status domain plan_tier data
         }
       }
     ''';
@@ -339,12 +347,35 @@ extension ApitoAuth on ApitoClient {
     if (params.name != null) variables['name'] = params.name;
     if (params.data != null) variables['data'] = params.data;
     if (params.domain != null) variables['domain'] = params.domain;
+    if (params.planTier != null) variables['plan_tier'] = params.planTier;
     final data = await execute(query, variables: variables);
     final row = data['updateTenant'] as Map<String, dynamic>?;
     if (row == null || (row['id'] as String?)?.isEmpty != false) {
       throw ApitoError('Invalid response format for updateTenant');
     }
     return TenantCatalogSearchRow.fromJson(row);
+  }
+
+  /// Public GraphQL: control-plane tenant for the authenticated app-user token.
+  /// Call against `/secured/graphql` (or public) with the user JWT from [loginUser].
+  Future<MyTenant> myTenant() async {
+    const query = r'''
+      query MyTenant {
+        myTenant {
+          id
+          name
+          domain
+          status
+          plan_tier
+        }
+      }
+    ''';
+    final data = await execute(query);
+    final raw = data['myTenant'] as Map<String, dynamic>?;
+    if (raw == null || (raw['id'] as String?)?.trim().isEmpty != false) {
+      throw ApitoError('Invalid response format for myTenant');
+    }
+    return MyTenant.fromJson(raw);
   }
 
   /// Soft-delete a catalog tenant row (status=deleted).
@@ -364,7 +395,9 @@ extension ApitoAuth on ApitoClient {
     return ok;
   }
 
-  /// Create a project user (local password). Engine rejects duplicate email/phone project-wide.
+  /// Create a project user (local password). Requires project admin.
+  /// Engine rejects duplicate email/phone project-wide.
+  /// Prefer [registerUser] for public mobile signup (no admin key in the client).
   Future<ApitoUser> createUser(
     String projectId,
     CreateUserParams params,
@@ -400,6 +433,47 @@ extension ApitoAuth on ApitoClient {
     final u = data['createUser'] as Map<String, dynamic>?;
     if (u == null || (u['id'] as String?)?.isEmpty != false) {
       throw ApitoError('Invalid response format for createUser');
+    }
+    return ApitoUser.fromJson(u);
+  }
+
+  /// Public self-signup. Works with a non-admin project login key.
+  /// Server assigns `default_registration_role` (never client-chosen).
+  Future<ApitoUser> registerUser(
+    String projectId,
+    RegisterUserParams params,
+  ) async {
+    final password = params.password.trim();
+    if (password.isEmpty) throw ApitoError('password is required');
+    final email = (params.email ?? '').trim();
+    final phone = (params.phone ?? '').trim();
+    if (email.isEmpty && phone.isEmpty) {
+      throw ApitoError('email or phone is required');
+    }
+    const query = r'''
+      mutation RegisterUser($project_id: String!, $password: String!, $email: String, $phone: String, $username: String) {
+        registerUser(project_id: $project_id, password: $password, email: $email, phone: $phone, username: $username) {
+          id email phone role provider status created_at updated_at
+        }
+      }
+    ''';
+    final variables = <String, dynamic>{
+      'project_id': projectId,
+      'password': password,
+    };
+    if (email.isNotEmpty) variables['email'] = email;
+    if (phone.isNotEmpty) variables['phone'] = phone;
+    final username = (params.username ?? '').trim();
+    if (username.isNotEmpty) variables['username'] = username;
+
+    final data = await execute(
+      query,
+      variables: variables,
+      projectId: projectId,
+    );
+    final u = data['registerUser'] as Map<String, dynamic>?;
+    if (u == null || (u['id'] as String?)?.isEmpty != false) {
+      throw ApitoError('Invalid response format for registerUser');
     }
     return ApitoUser.fromJson(u);
   }

@@ -1,18 +1,14 @@
 # flutter_admin_sdk — Current
 
-## Working on
-
-- **0.6.9 (2026-07-29):** Nested-snake connection field helpers; report
-  helpers read `food_list` / `transaction_category` (camel fallback);
-  `ak_` → `X-Apito-Key`; `deleteModelSystem`.
-  Local commit `6e56692` — **ask before push** to origin.
+- **Done (2026-08-09, uncommitted):** Tenant `planTier` on catalog
+  models/create/update; public `myTenant()` for app-user JWT.
+- **Released v0.6.10 (2026-08-07):** `listModelSystem(connection:)`;
+  apt_ as apiKey stays `X-Apito-Key`; media raw-type detection. Tagged/
+  pushed.
 
 ## Next
 
-- Push `main` when user confirms.
-- Pre-existing: `canonicalizeModelName rejects run-on` test still fails
-  (`foodorder` accepted) — not introduced by 0.6.9 snake work.
+- Confirm commit + version bump with engine plan_tier release
 
 ## Last Updated
-
-2026-07-30
+2026-08-09

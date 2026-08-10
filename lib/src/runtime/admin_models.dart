@@ -48,10 +48,11 @@ class LoginUserParams {
     this.code,
     this.state,
     this.idToken,
+    this.signup,
   });
 
   final String projectId;
-  /// SaaS per-tenant separate DB: required by engine on `loginUser`.
+  /// SaaS per-tenant separate DB: optional on `loginUser`.
   /// Google paths: engine may auto-link verified email to an existing user.
   /// On Cloudflare Workers v1, Google paths are unavailable; password login is supported.
   final String? tenantId;
@@ -62,6 +63,10 @@ class LoginUserParams {
   final String? code;
   final String? state;
   final String? idToken;
+
+  /// When `false`, Google/OAuth must find an existing account (no auto-provision).
+  /// Omit / `true`: allow signup auto-provision when [tenantId] is empty.
+  final bool? signup;
 }
 
 class LoginUserResponse {
@@ -94,6 +99,22 @@ class CreateUserParams {
   final String? tenantId;
 }
 
+/// Public self-signup (engine `registerUser`). Role is forced server-side to
+/// `default_registration_role` — never pass/trust a client role for this path.
+class RegisterUserParams {
+  const RegisterUserParams({
+    required this.password,
+    this.email,
+    this.phone,
+    this.username,
+  });
+
+  final String password;
+  final String? email;
+  final String? phone;
+  final String? username;
+}
+
 class UpdateUserParams {
   const UpdateUserParams({this.email, this.phone, this.role, this.tenantId});
 
@@ -123,6 +144,7 @@ class TenantCatalogSearchRow {
     this.name,
     this.status,
     this.domain,
+    this.planTier,
     this.data,
   });
 
@@ -130,6 +152,7 @@ class TenantCatalogSearchRow {
   final String? name;
   final String? status;
   final String? domain;
+  final String? planTier;
   final String? data;
 
   factory TenantCatalogSearchRow.fromJson(Map<String, dynamic> json) =>
@@ -138,6 +161,7 @@ class TenantCatalogSearchRow {
         name: json['name'] as String?,
         status: json['status'] as String?,
         domain: json['domain'] as String?,
+        planTier: json['plan_tier'] as String?,
         data: json['data'] as String?,
       );
 }
@@ -153,6 +177,7 @@ class TenantCatalogListItem {
     required this.id,
     this.name,
     this.domain,
+    this.planTier,
     this.icon,
     this.data,
   });
@@ -160,6 +185,7 @@ class TenantCatalogListItem {
   final String id;
   final String? name;
   final String? domain;
+  final String? planTier;
   final String? icon;
   final String? data;
 
@@ -168,6 +194,7 @@ class TenantCatalogListItem {
         id: json['id'] as String? ?? '',
         name: json['name'] as String?,
         domain: json['domain'] as String?,
+        planTier: json['plan_tier'] as String?,
         icon: json['icon'] as String?,
         data: json['data'] as String?,
       );
@@ -184,19 +211,47 @@ class CreateTenantParams {
     required this.name,
     this.data,
     this.domain,
+    this.planTier,
   });
 
   final String name;
   final String? data;
   final String? domain;
+  final String? planTier;
 }
 
 class UpdateTenantParams {
-  const UpdateTenantParams({this.name, this.data, this.domain});
+  const UpdateTenantParams({this.name, this.data, this.domain, this.planTier});
 
   final String? name;
   final String? data;
   final String? domain;
+  final String? planTier;
+}
+
+/// Public GraphQL `myTenant` payload for the authenticated app-user token.
+class MyTenant {
+  const MyTenant({
+    required this.id,
+    this.name,
+    this.domain,
+    this.status,
+    this.planTier,
+  });
+
+  final String id;
+  final String? name;
+  final String? domain;
+  final String? status;
+  final String? planTier;
+
+  factory MyTenant.fromJson(Map<String, dynamic> json) => MyTenant(
+        id: json['id'] as String? ?? '',
+        name: json['name'] as String?,
+        domain: json['domain'] as String?,
+        status: json['status'] as String?,
+        planTier: json['plan_tier'] as String?,
+      );
 }
 
 class ApitoFile {
