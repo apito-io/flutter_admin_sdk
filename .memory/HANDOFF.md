@@ -1,10 +1,11 @@
-# Handoff — flutter_admin_sdk 2026-08-09
+# Handoff — flutter_admin_sdk 2026-08-12
 
 ## Done (uncommitted)
 
-- `planTier` on tenant list/create/update GraphQL
-- `ApitoClient.myTenant()` for secured/public GraphQL
+- Project-payment REST helpers + types (verify / get / cancel)
+- Version **0.6.13**; CONTRACT + CHANGELOG
+- Prior: `listProjectPlans`, planTier / myTenant
 
 ## Next
 
-- Bump + publish with engine release; ask before commit/tag
+- Ask before commit/tag; Kisti path-dep picks up automatically

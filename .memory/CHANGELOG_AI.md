@@ -1,3 +1,13 @@
+## 2026-08-12 — v0.6.13 ApitoProjectPayment REST
+
+- **Changed:** `verifyProjectPayment` / `getTenantSubscription` /
+  `cancelTenantSubscription` + `ProjectTenantSubscription`;
+  `projectPaymentApiBaseUrl`; CONTRACT monetization; bump **0.6.13**.
+- **Why:** Apps must cancel via engine (Play first) — no bespoke HTTP or
+  hardcoded manage URLs.
+- **Affected:** `lib/src/runtime/project_payment.dart`, barrel, tests,
+  CONTRACT/CHANGELOG. Ask before commit.
+
 ## 2026-08-09 — Tenant planTier + myTenant
 
 - **Changed:** `planTier` on tenant catalog models/create/update GraphQL;
