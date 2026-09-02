@@ -27,6 +27,8 @@ enum PlanTier {
     final key = (raw ?? '').trim().toLowerCase();
     switch (key) {
       case 'paid':
+      case 'pro': // legacy / display slug used by some projects
+      case 'business':
         return PlanTier.paid;
       case 'paid_plus':
       case 'paid+':

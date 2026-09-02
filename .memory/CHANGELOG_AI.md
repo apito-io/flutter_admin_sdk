@@ -6,7 +6,7 @@
 - **Why:** Apps must cancel via engine (Play first) — no bespoke HTTP or
   hardcoded manage URLs.
 - **Affected:** `lib/src/runtime/project_payment.dart`, barrel, tests,
-  CONTRACT/CHANGELOG. Ask before commit.
+  CONTRACT/CHANGELOG. Tagged **v0.6.13**.
 
 ## 2026-08-09 — Tenant planTier + myTenant
 

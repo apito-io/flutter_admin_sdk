@@ -16,6 +16,8 @@ export 'src/runtime/mutation_builder.dart';
 export 'src/runtime/naming.dart';
 export 'src/runtime/plan_quota.dart';
 export 'src/runtime/plan_tier.dart';
+export 'src/runtime/project_payment.dart';
+export 'src/runtime/project_plans.dart';
 export 'src/runtime/query_builder.dart';
 export 'src/runtime/rest.dart';
 export 'src/runtime/storage.dart';

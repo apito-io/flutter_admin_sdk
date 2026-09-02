@@ -221,11 +221,14 @@ class CreateTenantParams {
 }
 
 class UpdateTenantParams {
+  /// [planTier] is deprecated — engine rejects `plan_tier` on `updateTenant`
+  /// (ledger-driven). Passing it throws client-side.
   const UpdateTenantParams({this.name, this.data, this.domain, this.planTier});
 
   final String? name;
   final String? data;
   final String? domain;
+  @Deprecated('Use subscription / Play mutations; updateTenant rejects plan_tier')
   final String? planTier;
 }
 

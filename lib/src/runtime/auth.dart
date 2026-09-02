@@ -323,22 +323,25 @@ extension ApitoAuth on ApitoClient {
     return TenantCatalogSearchRow.fromJson(row);
   }
 
-  /// Update catalog tenant name/data/domain/plan_tier.
+  /// Update catalog tenant name/data/domain (not plan_tier — ledger-driven).
   Future<TenantCatalogSearchRow> updateTenant(
     String tenantId,
     UpdateTenantParams params,
   ) async {
     final tid = tenantId.trim();
     if (tid.isEmpty) throw ApitoError('tenantId is required');
-    if (params.name == null &&
-        params.data == null &&
-        params.domain == null &&
-        params.planTier == null) {
+    // ignore: deprecated_member_use_from_same_package
+    if (params.planTier != null) {
+      throw ApitoError(
+        'planTier cannot be set via updateTenant; use createTenantSubscription / cancelTenantSubscription or Play verify',
+      );
+    }
+    if (params.name == null && params.data == null && params.domain == null) {
       throw ApitoError('at least one field must be provided');
     }
     const query = r'''
-      mutation UpdateTenant($tenant_id: String!, $name: String, $data: String, $domain: String, $plan_tier: String) {
-        updateTenant(tenant_id: $tenant_id, name: $name, data: $data, domain: $domain, plan_tier: $plan_tier) {
+      mutation UpdateTenant($tenant_id: String!, $name: String, $data: String, $domain: String) {
+        updateTenant(tenant_id: $tenant_id, name: $name, data: $data, domain: $domain) {
           id name status domain plan_tier data
         }
       }
@@ -347,7 +350,6 @@ extension ApitoAuth on ApitoClient {
     if (params.name != null) variables['name'] = params.name;
     if (params.data != null) variables['data'] = params.data;
     if (params.domain != null) variables['domain'] = params.domain;
-    if (params.planTier != null) variables['plan_tier'] = params.planTier;
     final data = await execute(query, variables: variables);
     final row = data['updateTenant'] as Map<String, dynamic>?;
     if (row == null || (row['id'] as String?)?.isEmpty != false) {

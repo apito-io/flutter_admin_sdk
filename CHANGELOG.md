@@ -2,6 +2,32 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
+## [0.6.13] - 2026-09-02
+
+### Added
+
+- **ApitoProjectPayment REST** — `verifyProjectPayment`, `getTenantSubscription`,
+  `cancelTenantSubscription` + `ProjectTenantSubscription` type. Engine calls
+  Play cancel/revoke first, then updates the ledger; `manageUrl` comes from the
+  response (never hardcode package/SKU in apps).
+
+## [0.6.12] - 2026-08-11
+
+### Added
+
+- **`ProjectPlan` / `ProjectPlanPrice` / `ProjectPlanProviderProduct`** +
+  **`ApitoClient.listProjectPlans()`** — system GraphQL `getProjectPlans`
+  (name, prices, `provider_products`, legacy `play_product_id`). Apps use this
+  for dynamic Play Billing catalogs (product IDs + list prices).
+
+### Changed
+
+- **`updateTenant`** — rejects `planTier` client-side (engine ledger-driven). Mutation no longer sends `plan_tier`. `UpdateTenantParams.planTier` marked `@Deprecated`.
+
+### Docs
+
+- Engine additive: `searchTenants(status: idle)`, `last_login_at` — optional when apps need Idle UI.
+
 ## [0.6.11] - 2026-08-10
 
 ### Added

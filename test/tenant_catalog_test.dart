@@ -24,6 +24,17 @@ void main() {
       );
     });
 
+    test('updateTenant rejects planTier', () async {
+      expect(
+        client.updateTenant(
+          'tid',
+          // ignore: deprecated_member_use_from_same_package
+          const UpdateTenantParams(planTier: 'paid'),
+        ),
+        throwsA(isA<ApitoError>()),
+      );
+    });
+
     test('deleteTenant requires tenantId', () async {
       expect(
         client.deleteTenant(''),

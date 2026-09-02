@@ -39,8 +39,14 @@ All SDKs expose:
 - **GraphQL CRUD** (secured endpoint chainable builder + system fallback)
 - **REST storage**: `uploadFile`, `listFiles`, `deleteFiles` at `/files/upload|list|delete`
 - **Auth/admin**: `generateTenantToken`, `getTenants`, `getTenant`, `searchTenants`, `createTenant`, `updateTenant`, `deleteTenant`, `loginUser`, `googleOAuthState`, `searchUsers`, `searchTenantsByDomain`, `createUser`, `updateUser`, `resetUserPassword`, `deleteUser`
+- **Project plans**: `listProjectPlans()` (system GraphQL)
+- **ApitoProjectPayment** (engine origin REST, app-user Bearer — not `/secured` files):
+  - `verifyProjectPayment` → `POST /system/v1/project-payment/projects/:projectId/providers/:provider/verify`
+  - `getTenantSubscription` → `GET .../tenants/:tenantId/subscription`
+  - `cancelTenantSubscription` → `POST .../subscriptions/cancel` (`mode`: `cancel` | `revoke`)
+  - Type: `ProjectTenantSubscription` (`planTier`, `status`, `currentPeriodEnd`, `cancelAt`, `manageUrl`, …)
 
-Pro SaaS **tenant catalog** lifecycle uses system GraphQL methods above — not secured dynamic model roots on the `tenant` model.
+Pro SaaS **tenant catalog** lifecycle uses system GraphQL methods above — not secured dynamic model roots on the `tenant` model. Do not set `plan_tier` via `updateTenant`; use verify / cancel / admin subscription mutations.
 
 Pro SaaS user ops accept optional **`tenantId`** / GraphQL `tenant_id` on `searchUsers`, `createUser`, and `updateUser` (in addition to `loginUser`). Omit on general projects. **`searchUsers`** also accepts optional **`q`** for free-text filter on email, username, phone, or id.
 
