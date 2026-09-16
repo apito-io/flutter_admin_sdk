@@ -1,11 +1,10 @@
 # flutter_admin_sdk — Current
 
-- **0.6.13 tagged 2026-09-02:** ApitoProjectPayment REST
-  (`verifyProjectPayment`, `getTenantSubscription`,
-  `cancelTenantSubscription`). No partner GraphQL — product apps omit
-  `partner_id`.
-- Prior: **0.6.12** `listProjectPlans`; `updateTenant` rejects `planTier`.
+- **0.6.14 (2026-09-13, untagged until you confirm):** `oauthState`,
+  `searchUsers` selects `username`, CHANGELOG/CONTRACT document `registerUser`.
+- `udbhabon/platform/flutter_admin_sdk` is a symlink to this repo.
+- Prior: **0.6.13** ApitoProjectPayment REST. No partner GraphQL.
 
 ## Last Updated
 
-2026-09-02
+2026-09-13

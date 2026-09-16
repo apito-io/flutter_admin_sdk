@@ -1,3 +1,10 @@
+## 2026-09-13 — v0.6.14 oauthState + searchUsers username
+
+- **Changed:** `oauthState`; `searchUsers` selects `username`; `ApitoUser.username`;
+  CHANGELOG/CONTRACT list `registerUser` (public signup, not admin `createUser`).
+- **Why:** JS 3.14.x parity that Flutter mobile actually needs. Skip partners/Casbin/React.
+- **Affected:** `auth.dart`, `admin_models.dart`, `pubspec` **0.6.14**. Ask before tag/push.
+
 ## 2026-08-12 — v0.6.13 ApitoProjectPayment REST
 
 - **Changed:** `verifyProjectPayment` / `getTenantSubscription` /

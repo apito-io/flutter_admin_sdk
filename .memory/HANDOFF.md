@@ -1,14 +1,17 @@
-# Handoff — flutter_admin_sdk 2026-09-02
+# Handoff — flutter_admin_sdk 2026-09-13
 
-## Released
+## Done (uncommitted / untagged)
 
-- Tag **v0.6.13** on `main`. Payment REST only; no partner APIs.
-  Engine **v2.4.48**. Product apps path-link this package.
+- **0.6.14:** `oauthState(projectId, provider)`; `searchUsers` `username`;
+  `registerUser` documented (API existed since 0.6.11).
+- Platform-app already uses `registerUser` + `loginUser`.
+- Do not port `searchPartners` / Casbin / JS React UI.
 
 ## Do not
 
-- Port `searchPartners` / `partner_id` unless an app UI lists partners.
+- Tag/push **v0.6.14** until you confirm.
+- Port partner GraphQL unless an app UI lists partners.
 
 ## Last Updated
 
-2026-09-02
+2026-09-13
