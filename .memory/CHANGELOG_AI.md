@@ -1,3 +1,15 @@
+## 2026-10-16 — Canonical Facebook token login query
+
+- **Changed:** Kept one `loginUser` document with optional `access_token`; the Facebook method supplies the variable and existing methods stay compatible for published clients.
+- **Why:** Store binaries cannot update alongside the engine. The engine ships the additive schema before a new SDK/app release uses the argument.
+- **Affected:** `auth.dart`, SDK decision docs. Format passed; full `dart test` retains unrelated existing failures in `project_plans_test.dart` and `naming_test.dart`. No version bump. Ask before tag or `./command.sh save`.
+
+## 2026-10-15 — Facebook access token on loginUser
+
+- **Changed:** `LoginUserParams.accessToken`. The login query sends `access_token` when the method is `facebook_access_token`.
+- **Why:** Kisti’s Facebook button has a user token, not an OAuth code.
+- **Affected:** `auth.dart`, `admin_models.dart`. No pubspec version bump. Ask before tag or `./command.sh save`.
+
 ## 2026-09-13 — v0.6.14 oauthState + searchUsers username
 
 - **Changed:** `oauthState`; `searchUsers` selects `username`; `ApitoUser.username`;
