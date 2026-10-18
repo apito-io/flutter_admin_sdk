@@ -1,3 +1,9 @@
+## 2026-10-18 — pub.dev metadata, still unpublished
+
+- **Changed:** Added an Apache-2.0 LICENSE and pubspec homepage, repository, issue tracker, documentation, and topics. README leads with REST and GraphQL.
+- **Why:** The package had no LICENSE and no pub.dev discovery fields. It is not ready to publish.
+- **Affected:** `LICENSE`, `pubspec.yaml`, `README.md`. `publish_to: none` remains. Dry-run fails on the `package:build` import. No publish.
+
 ## 2026-10-16 — Canonical Facebook token login query
 
 - **Changed:** Kept one `loginUser` document with optional `access_token`; the Facebook method supplies the variable and existing methods stay compatible for published clients.

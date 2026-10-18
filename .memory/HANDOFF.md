@@ -1,4 +1,8 @@
-# Handoff — flutter_admin_sdk 2026-10-16
+# Handoff — flutter_admin_sdk 2026-10-18
+
+- **Done:** LICENSE, pubspec discovery fields, README opening. `publish_to: none` was not removed.
+- **Broken:** Dry-run cannot publish: `package:build` is imported from `lib/` and listed only under dev_dependencies.
+- **Do not:** Publish or remove `publish_to: none`. Leave `.memory` out of the public diff. `./command.sh save` until asked.
 
 - **Done:** `loginUser` keeps one canonical query with optional `access_token`; Facebook supplies it only through `facebook_access_token`. Published clients keep their old query.
 - **Verified:** `dart format --output=none --set-exit-if-changed lib/src/runtime/auth.dart` passed. Full `dart test` still has unrelated existing failures in `project_plans_test.dart` and `naming_test.dart`.

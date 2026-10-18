@@ -1,5 +1,22 @@
 # Flutter Admin SDK
 
+REST and GraphQL client for Flutter apps that talk to an Apito backend.
+
+```bash
+flutter pub add flutter_admin_sdk
+```
+
+```dart
+import 'package:flutter_admin_sdk/flutter_admin_sdk.dart';
+
+final client = ApitoClient(
+  config: ApitoConfig(
+    endpoint: 'http://localhost:5055/secured/graphql',
+    apiKey: 'your-key',
+  ),
+);
+```
+
 Admin Apito SDK for Flutter — chainable secured GraphQL, REST storage, auth/admin, plus schema-driven codegen (typed models, Where filters, Riverpod providers). Aligned with `js-admin-sdk` and `go-admin-sdk` (see [CONTRACT.md](CONTRACT.md), [SYNC_SUMMARY.md](SYNC_SUMMARY.md)).
 
 **Cloudflare Workers engine (`cloudflare_full`):** If `ApitoConfig.endpoint` / system GraphQL base URL points at a Workers-hosted engine, `generateTenantToken` and tenant catalog mutations are not implemented on Workers v1. `loginUser` password login works; Google OAuth does not. See [CONTRACT.md](CONTRACT.md#cloudflare-workers-v1-cloudflare_full).
