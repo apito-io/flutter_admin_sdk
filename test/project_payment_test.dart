@@ -1,4 +1,6 @@
 import 'package:flutter_admin_sdk/flutter_admin_sdk.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -41,6 +43,60 @@ void main() {
   });
 
   group('CancelTenantSubscriptionParams', () {
+    test('app-user session reaches project-payment REST', () async {
+      var calls = 0;
+      final client = ApitoClient(
+        config: const ApitoConfig(
+          endpoint: 'http://localhost:5050/secured/graphql',
+          apiKey: 'session-jwt',
+        ),
+        httpClient: MockClient((request) async {
+          calls++;
+          expect(request.headers['X-Apito-Key'], 'session-jwt');
+          return http.Response('{"id":"sub_1","provider":"custom"}', 200);
+        }),
+      );
+      final sub = await client.getSignedInTenantSubscription(
+        projectId: 'project',
+        tenantId: 'tenant',
+      );
+      expect(sub?.id, 'sub_1');
+      expect(sub?.provider, 'custom');
+      expect(calls, 1);
+      client.close();
+    });
+
+    test('bootstrap key is rejected before HTTP', () async {
+      var calls = 0;
+      final client = ApitoClient(
+        config: const ApitoConfig(
+          endpoint: 'http://localhost:5050/system/graphql',
+          apiKey: 'ak_bootstrap',
+        ),
+        httpClient: MockClient((_) async {
+          calls++;
+          return http.Response('{}', 200);
+        }),
+      );
+      await expectLater(
+        () => client.submitCustomPayment(
+          const SubmitCustomPaymentParams(
+            projectId: 'project',
+            tenantId: 'tenant',
+            email: 'a@b.c',
+            plan: 'pro',
+            amount: 200,
+            currency: 'BDT',
+            periodMonths: 1,
+            paymentReference: 'AbCdEf',
+          ),
+        ),
+        throwsA(isA<ArgumentError>()),
+      );
+      expect(calls, 0);
+      client.close();
+    });
+
     test('defaults mode to cancel', () {
       const p = CancelTenantSubscriptionParams(
         projectId: 'p',

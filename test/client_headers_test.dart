@@ -108,4 +108,29 @@ void main() {
       client.close();
     }
   });
+
+  test('bootstrap key cannot call createTenant', () async {
+    var calls = 0;
+    final client = ApitoClient(
+      config: const ApitoConfig(
+        endpoint: 'http://localhost:5050/system/graphql',
+        apiKey: 'ak_login',
+      ),
+      httpClient: MockClient((request) async {
+        calls++;
+        return http.Response('{"data":{}}', 200);
+      }),
+    );
+    await expectLater(
+      () => client.execute('mutation { createTenant(name: "x") { id } }'),
+      throwsA(isA<ArgumentError>().having(
+        (error) => error.message,
+        'message',
+        contains('OPERATOR_CREDENTIAL_REQUIRED'),
+      )),
+    );
+    await client.execute('query { searchTenantsByDomain(domain: "a.example") { id } }');
+    expect(calls, 1);
+    client.close();
+  });
 }

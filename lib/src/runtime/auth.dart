@@ -11,6 +11,7 @@ extension ApitoAuth on ApitoClient {
     String? duration,
     String? role,
   }) async {
+    requireOperatorCredential('generateTenantToken');
     var dur = (duration ?? '').trim();
     if (dur.isEmpty) {
       final now = DateTime.now().toUtc();
@@ -36,9 +37,10 @@ extension ApitoAuth on ApitoClient {
     return token;
   }
 
-  /// Project user login (password or Google OAuth). Google paths may auto-link
-  /// a verified email to an existing user; handle engine errors for unverified email,
-  /// conflicting google_sub, or multiple email matches.
+  /// Project user login (password, OAuth code, native Google, or native
+  /// Facebook token). Google/Facebook paths may auto-link a verified email to
+  /// an existing user; handle engine errors for unverified email, conflicting
+  /// provider identities, or multiple email matches.
   /// On Cloudflare Workers v1, Google paths are unavailable; password login is supported.
   Future<LoginUserResponse> loginUser(LoginUserParams params) async {
     final authMethod =
@@ -69,6 +71,15 @@ extension ApitoAuth on ApitoClient {
         throw ApitoError('id_token is required for google_id_token login');
       }
       variables['id_token'] = idToken;
+    } else if (authMethod == 'facebook_access_token') {
+      variables['auth_method'] = 'facebook_access_token';
+      final accessToken = (params.accessToken ?? '').trim();
+      if (accessToken.isEmpty) {
+        throw ApitoError(
+          'access_token is required for facebook_access_token login',
+        );
+      }
+      variables['access_token'] = accessToken;
     } else {
       final password = (params.password ?? '').trim();
       if (password.isEmpty) throw ApitoError('password is required');
@@ -82,9 +93,12 @@ extension ApitoAuth on ApitoClient {
       if (phone.isNotEmpty) variables['phone'] = phone;
     }
 
+    // access_token is optional. Published Android/iOS binaries omit it and
+    // remain valid after the additive engine schema change; new Facebook
+    // builds provide it when using facebook_access_token.
     const query = r'''
-      query LoginUser($project_id: String!, $tenant_id: String, $password: String, $auth_method: String, $email: String, $phone: String, $code: String, $state: String, $id_token: String, $signup: Boolean) {
-        loginUser(project_id: $project_id, tenant_id: $tenant_id, password: $password, auth_method: $auth_method, email: $email, phone: $phone, code: $code, state: $state, id_token: $id_token, signup: $signup) {
+      query LoginUser($project_id: String!, $tenant_id: String, $password: String, $auth_method: String, $email: String, $phone: String, $code: String, $state: String, $id_token: String, $access_token: String, $signup: Boolean) {
+        loginUser(project_id: $project_id, tenant_id: $tenant_id, password: $password, auth_method: $auth_method, email: $email, phone: $phone, code: $code, state: $state, id_token: $id_token, access_token: $access_token, signup: $signup) {
           token
           user {
             id email phone role provider tenant_id status created_at updated_at
@@ -109,6 +123,33 @@ extension ApitoAuth on ApitoClient {
           ? ApitoUser.fromJson(raw!['user'] as Map<String, dynamic>)
           : null,
     );
+  }
+
+  /// Signed OAuth state for provider login (system query `oauthState`).
+  /// Prefer this for facebook/github/x/linkedin; [googleOAuthState] remains a
+  /// Google-only alias.
+  Future<GoogleOAuthStateResponse> oauthState(
+    String projectId,
+    String provider,
+  ) async {
+    final p = provider.trim();
+    if (p.isEmpty) throw ApitoError('provider is required');
+    const query = r'''
+      query OAuthState($project_id: String!, $provider: String!) {
+        oauthState(project_id: $project_id, provider: $provider) { state }
+      }
+    ''';
+    final data = await execute(
+      query,
+      variables: {'project_id': projectId, 'provider': p},
+      projectId: projectId,
+    );
+    final state =
+        ((data['oauthState'] as Map?)?['state'] as String?)?.trim() ?? '';
+    if (state.isEmpty) {
+      throw ApitoError('Invalid response format for oauthState');
+    }
+    return GoogleOAuthStateResponse(state: state);
   }
 
   /// Signed OAuth state for Google login.
@@ -139,12 +180,13 @@ extension ApitoAuth on ApitoClient {
     String? tenantId,
     String? q,
   }) async {
+    requireOperatorCredential('searchUsers');
     const query = r'''
       query SearchUsers($project_id: String!, $limit: Int, $offset: Int, $tenant_id: String, $q: String) {
         searchUsers(project_id: $project_id, limit: $limit, offset: $offset, tenant_id: $tenant_id, q: $q) {
           count
           users {
-            id email phone role provider tenant_id status created_at updated_at
+            id email username phone role provider tenant_id status created_at updated_at
           }
         }
       }
@@ -215,6 +257,7 @@ extension ApitoAuth on ApitoClient {
     String? q,
     String? status,
   }) async {
+    requireOperatorCredential('searchTenants');
     final pid = projectId.trim();
     if (pid.isEmpty) throw ApitoError('projectId is required');
     const query = r'''
@@ -279,6 +322,7 @@ extension ApitoAuth on ApitoClient {
 
   /// List SaaS catalog tenants (system GraphQL only).
   Future<GetTenantsResponse> getTenants() async {
+    requireOperatorCredential('getTenants');
     const query = r'''
       query GetTenants {
         getTenants {
@@ -299,6 +343,7 @@ extension ApitoAuth on ApitoClient {
 
   /// Provision a SaaS catalog tenant (system GraphQL only).
   Future<TenantCatalogSearchRow> createTenant(CreateTenantParams params) async {
+    requireOperatorCredential('createTenant');
     final name = params.name.trim();
     if (name.isEmpty) throw ApitoError('name is required');
     const query = r'''
@@ -328,6 +373,7 @@ extension ApitoAuth on ApitoClient {
     String tenantId,
     UpdateTenantParams params,
   ) async {
+    requireOperatorCredential('updateTenant');
     final tid = tenantId.trim();
     if (tid.isEmpty) throw ApitoError('tenantId is required');
     // ignore: deprecated_member_use_from_same_package
@@ -382,6 +428,7 @@ extension ApitoAuth on ApitoClient {
 
   /// Soft-delete a catalog tenant row (status=deleted).
   Future<bool> deleteTenant(String tenantId) async {
+    requireOperatorCredential('deleteTenant');
     final tid = tenantId.trim();
     if (tid.isEmpty) throw ApitoError('tenantId is required');
     const query = r'''
@@ -404,6 +451,7 @@ extension ApitoAuth on ApitoClient {
     String projectId,
     CreateUserParams params,
   ) async {
+    requireOperatorCredential('createUser');
     final password = params.password.trim();
     if (password.isEmpty) throw ApitoError('password is required');
     const query = r'''
@@ -485,6 +533,7 @@ extension ApitoAuth on ApitoClient {
     String userId,
     UpdateUserParams params,
   ) async {
+    requireOperatorCredential('updateUser');
     final uid = userId.trim();
     if (uid.isEmpty) throw ApitoError('userId is required');
     if (params.email == null &&
@@ -517,6 +566,7 @@ extension ApitoAuth on ApitoClient {
 
   /// Set a new password for a project user.
   Future<bool> resetUserPassword(String userId, String password) async {
+    requireOperatorCredential('resetUserPassword');
     final uid = userId.trim();
     if (uid.isEmpty) throw ApitoError('userId is required');
     if (password.trim().isEmpty) throw ApitoError('password is required');
@@ -538,6 +588,7 @@ extension ApitoAuth on ApitoClient {
 
   /// Delete a project user by id.
   Future<bool> deleteUser(String userId) async {
+    requireOperatorCredential('deleteUser');
     final uid = userId.trim();
     if (uid.isEmpty) throw ApitoError('userId is required');
     const query = r'''

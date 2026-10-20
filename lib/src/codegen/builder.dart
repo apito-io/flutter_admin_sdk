@@ -110,6 +110,7 @@ class ApitoCodegen {
 /// Options:
 /// - `endpoint` — secured GraphQL URL (fetches live introspection at build time)
 /// - `api_key_env` — env var for X-Apito-Key (default `APITO_API_KEY`)
+/// - `project_id_env` — env var for X-Apito-Project-Id (default `APITO_PROJECT_ID`)
 /// - `tenant_id_env` — env var for X-Apito-Tenant-ID (default `APITO_TENANT_ID`)
 /// - `schema_file` — fallback/cached introspection JSON (default `apito_schema.json`)
 /// - `output` — generated Dart root (default `lib/generated`)
@@ -225,9 +226,12 @@ class ApitoGeneratorBuilder implements Builder {
 
     if (endpoint != null && endpoint.trim().isNotEmpty) {
       final apiKeyEnv = options['api_key_env'] as String? ?? 'APITO_API_KEY';
+      final projectIdEnv =
+          options['project_id_env'] as String? ?? 'APITO_PROJECT_ID';
       final tenantIdEnv =
           options['tenant_id_env'] as String? ?? 'APITO_TENANT_ID';
       final apiKey = env[apiKeyEnv] ?? '';
+      final projectId = env[projectIdEnv];
       final tenantId = env[tenantIdEnv];
 
       if (apiKey.isEmpty) {
@@ -241,6 +245,7 @@ class ApitoGeneratorBuilder implements Builder {
       return reader.fetchFromEndpoint(
         endpoint: endpoint.trim(),
         apiKey: apiKey,
+        projectId: projectId,
         tenantId: tenantId,
         modelFilter: modelFilter,
       );

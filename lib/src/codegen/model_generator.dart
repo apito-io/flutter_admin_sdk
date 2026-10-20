@@ -77,6 +77,12 @@ class ModelGenerator {
     buffer.writeln(
       '  static const String? defaultSortField = ${_defaultSortFieldLiteral(model)};',
     );
+    buffer.writeln(
+      '  static const bool supportsListRelation = ${model.listRelationFilterKeys.isNotEmpty};',
+    );
+    buffer.writeln(
+      '  static const bool supportsMutationRelations = ${model.relationConnectKeys.isNotEmpty};',
+    );
     buffer.writeln();
 
     buffer.writeln('  factory $className.fromJson(Map<String, dynamic> json) {');
@@ -182,6 +188,24 @@ class ModelGenerator {
     return _dartFieldName(graphqlConnectKey);
   }
 
+  /// Connect payloads may list both `train` and `train_id`. Both map to
+  /// factory `train`; keep the `*_id` scalar (the one upserts actually send).
+  Iterable<ApitoSchemaRelationKey> _connectFactoryKeys(ApitoSchemaModel model) {
+    final byFactory = <String, ApitoSchemaRelationKey>{};
+    for (final key in model.relationKeys.where((k) => k.forConnect)) {
+      final factoryName = _connectFactoryName(key.name);
+      final existing = byFactory[factoryName];
+      if (existing == null) {
+        byFactory[factoryName] = key;
+        continue;
+      }
+      final preferNew =
+          key.name.endsWith('_id') && !existing.name.endsWith('_id');
+      if (preferNew) byFactory[factoryName] = key;
+    }
+    return byFactory.values;
+  }
+
   String generatePayloadFile(ApitoSchemaModel model) {
     final className = apitoSingularGraphQLTypeName(model.name);
     final fileBase = model.name;
@@ -273,8 +297,10 @@ class ModelGenerator {
     buffer.writeln('  const ${className}Connect({this.fields = const {}});');
     buffer.writeln('  final Map<String, dynamic> fields;');
     buffer.writeln('  Map<String, dynamic> toJson() => fields;');
-    for (final key in model.relationKeys.where((k) => k.forConnect)) {
+    final emittedFactories = <String>{};
+    for (final key in _connectFactoryKeys(model)) {
       final factoryName = _connectFactoryName(key.name);
+      if (!emittedFactories.add(factoryName)) continue;
       final constName = _relationKeyConstName(key.name);
       buffer.writeln();
       buffer.writeln('  /// Scalar `${key.name}` on mutation/upsert `connect`.');

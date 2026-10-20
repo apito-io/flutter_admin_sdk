@@ -15,10 +15,11 @@ Custom Dart codegen from Apito introspection JSON → models, GraphQL operations
 
 ## Flows
 
-- **Configure**: `build.yaml` + `@ApitoModel` annotations in consumer app.
-- **Run**: `dart run build_runner build` triggers `ApitoBuilder`.
-- **Input**: `example/apito_introspection.json` or live fetch per `CONTRACT.md`.
+- **Snapshot**: `apito types --language dart --out apito_schema.json` writes a credential-free introspection file with the local account. The CLI does not generate Dart.
+- **Configure**: `build.yaml` points `schema_file` at that snapshot and leaves `endpoint` empty.
+- **Run**: `dart run build_runner build --delete-conflicting-outputs` triggers `ApitoBuilder`.
 - **Output**: `lib/generated/` — models, operations, providers, where classes.
+- **Kisti** uses this snapshot flow. **Platform** already reads `apito_schema.json` with an empty endpoint, so it stays unchanged.
 
 ## Main files
 

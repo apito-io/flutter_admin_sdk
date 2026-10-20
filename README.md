@@ -98,10 +98,6 @@ targets:
         generate_for:
           - apito_schema.json
         options:
-          endpoint: http://localhost:5050/secured/graphql
-          api_key_env: APITO_API_KEY
-          tenant_id_env: APITO_TENANT_ID
-          secrets_file: secrets.env
           schema_file: apito_schema.json
           output: lib/generated
           generate_providers: true
@@ -110,10 +106,12 @@ targets:
 ```
 
 ```bash
-# secrets.env: APITO_API_KEY=... APITO_TENANT_ID=...
+apito types --language dart --out apito_schema.json
 dart pub get
 dart run build_runner build --delete-conflicting-outputs
 ```
+
+`apito types` writes the snapshot with the local account. Leave `endpoint` empty so build_runner does not fetch with an API key.
 
 Then run `dart run build_runner build` again in your app for `@riverpod` `.g.dart` files if `generate_providers: true`.
 

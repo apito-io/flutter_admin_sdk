@@ -38,7 +38,8 @@ Reference output: `example/lib/generated/operations/loan.graphql`.
 All SDKs expose:
 - **GraphQL CRUD** (secured endpoint chainable builder + system fallback)
 - **REST storage**: `uploadFile`, `listFiles`, `deleteFiles` at `/files/upload|list|delete`
-- **Auth/admin**: `generateTenantToken`, `getTenants`, `getTenant`, `searchTenants`, `createTenant`, `updateTenant`, `deleteTenant`, `loginUser`, `googleOAuthState`, `searchUsers`, `searchTenantsByDomain`, `createUser`, `updateUser`, `resetUserPassword`, `deleteUser`
+- **Auth/admin**: `generateTenantToken`, `getTenants`, `getTenant`, `searchTenants`, `createTenant`, `updateTenant`, `deleteTenant`, `loginUser`, `oauthState`, `googleOAuthState`, `searchUsers`, `searchTenantsByDomain`, `registerUser`, `createUser`, `updateUser`, `resetUserPassword`, `deleteUser`
+- `LoginUserParams(authMethod: 'facebook_access_token')` sends the native Facebook user token through the optional GraphQL `access_token` argument. The app secret remains on the engine.
 - **Project plans**: `listProjectPlans()` (system GraphQL)
 - **ApitoProjectPayment** (engine origin REST, app-user Bearer — not `/secured` files):
   - `verifyProjectPayment` → `POST /system/v1/project-payment/projects/:projectId/providers/:provider/verify`
@@ -48,7 +49,9 @@ All SDKs expose:
 
 Pro SaaS **tenant catalog** lifecycle uses system GraphQL methods above — not secured dynamic model roots on the `tenant` model. Do not set `plan_tier` via `updateTenant`; use verify / cancel / admin subscription mutations.
 
-Pro SaaS user ops accept optional **`tenantId`** / GraphQL `tenant_id` on `searchUsers`, `createUser`, and `updateUser` (in addition to `loginUser`). Omit on general projects. **`searchUsers`** also accepts optional **`q`** for free-text filter on email, username, phone, or id.
+Pro SaaS user ops accept optional **`tenantId`** / GraphQL `tenant_id` on `searchUsers`, `createUser`, and `updateUser` (in addition to `loginUser`). Omit on general projects. **`searchUsers`** also accepts optional **`q`** for free-text filter on email, username, phone, or id. **`searchUsers`** selects `username`.
+
+**`registerUser`** is public self-signup (no project admin). Engine assigns `default_registration_role` — never pass a client role. Admin CRUD stays on **`createUser`**.
 
 ### Cloudflare Workers v1 (`cloudflare_full`)
 

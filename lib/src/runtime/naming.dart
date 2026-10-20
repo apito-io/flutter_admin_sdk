@@ -288,14 +288,20 @@ String formatApitoConnectionSubselections(
   }).join('\n');
 }
 
-String buildApitoCreateMutation(String resource, List<String> fields) {
+String buildApitoCreateMutation(
+  String resource,
+  List<String> fields, {
+  bool includeRelations = true,
+}) {
   final id = apitoSingularResourceName(resource);
   final pascal = pascalFromAnyModelId(id);
   final payload = apitoGraphQLComposedTypeName(id, 'Create_Payload');
   final rel = apitoGraphQLComposedTypeName(id, 'Relation_Connect_Payload');
+  final connectVar = includeRelations ? ', \$connect: $rel' : '';
+  final connectArg = includeRelations ? ', connect: \$connect' : '';
   return '''
-mutation Create$pascal(\$payload: $payload!, \$connect: $rel) {
-  create$pascal(payload: \$payload, connect: \$connect, status: published) {
+mutation Create$pascal(\$payload: $payload!$connectVar) {
+  create$pascal(payload: \$payload$connectArg, status: published) {
     id
     data {
       ${fields.join('\n      ')}

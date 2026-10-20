@@ -2,10 +2,18 @@ import 'naming.dart';
 
 /// Options for [DocumentBuilder] list operations.
 class DocumentBuilderOptions {
-  const DocumentBuilderOptions({this.supportsRelation = true});
+  const DocumentBuilderOptions({
+    this.supportsRelation = true,
+    this.supportsMutationRelations = true,
+  });
 
   /// When false, list/count omit the GraphQL `relation` argument.
   final bool supportsRelation;
+
+  /// When false, create/update/upsert omit `connect` / `disconnect`.
+  ///
+  /// Models with no relations have no `Relation_Connect_Payload` input.
+  final bool supportsMutationRelations;
 }
 
 /// Builds GraphQL operation strings for Apito secured/project API.
@@ -274,22 +282,28 @@ query Count$_listPascal(
   }
 
   String buildCreateMutation({required List<String> fields}) =>
-      buildApitoCreateMutation(model, fields);
+      buildApitoCreateMutation(
+        model,
+        fields,
+        includeRelations: options.supportsMutationRelations,
+      );
 
   String buildUpdateMutation({
     required List<String> fields,
-    bool includeRelations = true,
+    bool? includeRelations,
   }) {
+    final withRelations =
+        includeRelations ?? options.supportsMutationRelations;
     final updatePayload = apitoGraphQLComposedTypeName(model, 'Update_Payload');
     final relConn =
         apitoGraphQLComposedTypeName(model, 'Relation_Connect_Payload');
     final relDis =
         apitoGraphQLComposedTypeName(model, 'Relation_Disconnect_Payload');
-    final relationVarDefs = includeRelations
+    final relationVarDefs = withRelations
         ? ',\n    \$connect: $relConn,\n    \$disconnect: $relDis'
         : '';
     final relationArgs =
-        includeRelations ? ', connect: \$connect, disconnect: \$disconnect' : '';
+        withRelations ? ', connect: \$connect, disconnect: \$disconnect' : '';
 
     return '''
 mutation Update$_singularPascal(
@@ -325,10 +339,15 @@ mutation Delete$_singularPascal(\$ids: [String]!) {
         apitoGraphQLComposedTypeName(model, 'List_Upsert_Payload');
     final listConnect =
         apitoGraphQLComposedTypeName(model, 'Relation_Connect_Payload');
+    final connectVar = options.supportsMutationRelations
+        ? ', \$connect: $listConnect'
+        : '';
+    final connectArg =
+        options.supportsMutationRelations ? ', connect: \$connect' : '';
 
     return '''
-mutation Upsert$_listPascal(\$payloads: [$upsertPayload!]!, \$connect: $listConnect) {
-  upsert$_listPascal(payloads: \$payloads, connect: \$connect, status: published) {
+mutation Upsert$_listPascal(\$payloads: [$upsertPayload!]!$connectVar) {
+  upsert$_listPascal(payloads: \$payloads$connectArg, status: published) {
     id
     data {
       ${fields.join('\n      ')}

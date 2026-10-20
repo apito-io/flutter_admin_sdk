@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'client_runtime.dart';
 import 'config.dart';
 import 'query_builder.dart';
+import 'system_operation_classifier.dart';
 import 'types.dart';
 
 /// HTTP GraphQL client for Apito secured/project endpoint.
@@ -22,6 +24,32 @@ class ApitoClient {
   ApitoConfig get config => _config;
   http.Client get httpClient => _http;
 
+  /// Whether this client has the credential class reserved for system
+  /// administration. The server still enforces the token's actual grants.
+  bool get hasOperatorCredential {
+    final key =
+        (_config.accessToken ?? _config.authToken ?? _config.apiKey).trim();
+    return key.startsWith('apt_');
+  }
+
+  bool get _usesSystemGraphQLEndpoint {
+    final uri = Uri.tryParse(_config.endpoint);
+    final path = uri?.path
+            .toLowerCase()
+            .replaceAll(RegExp(r'/+$'), '') ??
+        '';
+    return path == '/system/graphql' || path == '/system/graphql/v2';
+  }
+
+  /// Fail before a request is made when a system-only SDK method is called
+  /// with a bootstrap or app-user credential.
+  void requireOperatorCredential(String operation) {
+    if (hasOperatorCredential) return;
+    throw ArgumentError(
+      'OPERATOR_CREDENTIAL_REQUIRED: $operation requires an apt_ operator token',
+    );
+  }
+
   QueryBuilder from(String model) => QueryBuilder(client: this, model: model);
 
   Map<String, String> buildHeaders({String? projectId, String? tenantId}) {
@@ -36,17 +64,14 @@ class ApitoClient {
         'Generate a unified apt_ access token in Console → Access Token and pass it as accessToken.',
       );
     }
-    // Match js-admin-sdk: ak_ → X-Apito-Key; explicit accessToken/authToken → Bearer.
-    // apt_ passed only as apiKey (login bootstrap) stays on X-Apito-Key — some
-    // engine stacks reject Authorization: Bearer for those keys.
-    if (key.startsWith('ak_')) {
+    if (key.startsWith('apt_')) {
+      headers['Authorization'] = 'Bearer $key';
+      headers['X-Use-Cookies'] = 'false';
+    } else if (key.startsWith('ak_')) {
       headers['X-Apito-Key'] = key;
     } else if (_config.useBearerAuth ||
         (_config.authToken?.isNotEmpty ?? false) ||
         (_config.accessToken?.isNotEmpty ?? false)) {
-      // Unified apt_ access token / JWT: Authorization: Bearer only. X-Use-Cookies:
-      // false tells the engine this is a headless API call (no browser
-      // session cookies).
       if (key.isNotEmpty) {
         headers['Authorization'] = 'Bearer $key';
         headers['X-Use-Cookies'] = 'false';
@@ -71,6 +96,14 @@ class ApitoClient {
     String? projectId,
     String? tenantId,
   }) async {
+    if (_usesSystemGraphQLEndpoint &&
+        !hasOperatorCredential &&
+        classifySystemOperation(document) == SystemOperationClass.privileged) {
+      throw ArgumentError(
+        'OPERATOR_CREDENTIAL_REQUIRED: bootstrap credentials cannot call '
+        'privileged system operations',
+      );
+    }
     final response = await _http.post(
       Uri.parse(_config.endpoint),
       headers: buildHeaders(projectId: projectId, tenantId: tenantId),
@@ -105,6 +138,37 @@ class ApitoClient {
     return decoded['data'] as Map<String, dynamic>? ?? {};
   }
 
+  /// Pre-login project runtime for one platform. Does not take a model name.
+  Future<ClientRuntime> fetchClientRuntime(String platform) async {
+    final data = await execute(
+      r'''
+      query ClientRuntime($platform: String!) {
+        clientRuntime(platform: $platform) {
+          platform
+          min_version_name
+          min_build_number
+          force_update
+          store_url
+          message_en
+          message_bn
+          maintenance
+          maintenance_hours
+          extras
+        }
+      }
+      ''',
+      variables: {'platform': platform},
+    );
+    final runtime = data['clientRuntime'];
+    if (runtime is! Map) {
+      throw ApitoError('clientRuntime returned no payload');
+    }
+    return ClientRuntime.fromGraphql(
+      Map<dynamic, dynamic>.from(runtime),
+      platform: platform,
+    );
+  }
+
   bool _isAuthError(String msg) {
     final lower = msg.toLowerCase();
     return lower.contains('unauthorized') ||
@@ -125,6 +189,7 @@ class ApitoClient {
     int page = 1,
     int limit = 200,
   }) async {
+    requireOperatorCredential('listModelSystem');
     const query = r'''
       query GetModelData(
         $model: String!
@@ -176,6 +241,7 @@ class ApitoClient {
     String? id,
     Map<String, dynamic>? connect,
   }) async {
+    requireOperatorCredential('upsertModelSystem');
     const mutation = r'''
       mutation UpsertModelData(
         $model_name: String!
@@ -215,6 +281,7 @@ class ApitoClient {
     required String modelName,
     required String id,
   }) async {
+    requireOperatorCredential('deleteModelSystem');
     const mutation = r'''
       mutation DeleteModelData($model_name: String!, $_id: String) {
         deleteModelData(model_name: $model_name, _id: $_id) {

@@ -42,6 +42,9 @@ class ProviderGenerator {
     buffer.writeln('        .select($className.queryFields)');
     buffer.writeln('        .where(where?.toJson() ?? {})');
     buffer.writeln('        .page(page).limit(limit);');
+    buffer.writeln('    if (!$className.supportsListRelation) {');
+    buffer.writeln('      query = query.withoutRelation();');
+    buffer.writeln('    }');
     buffer.writeln('    if (relationFilters != null) {');
     buffer.writeln('      for (final rf in relationFilters) {');
     buffer.writeln('        query = query.relationEq(rf.relation, rf.value);');
@@ -85,7 +88,10 @@ class ProviderGenerator {
     buffer.writeln('    final client = ref.read($clientProviderName);');
     buffer.writeln("    final result = await client.from('${model.name}')");
     buffer.writeln('        .select($className.queryFields)');
-    buffer.writeln('        .insert(payload: payload.toJson())');
+    buffer.writeln('        .insert(');
+    buffer.writeln('          payload: payload.toJson(),');
+    buffer.writeln('          includeRelations: $className.supportsMutationRelations,');
+    buffer.writeln('        )');
     buffer.writeln('        .connectWith(connect?.toJson() ?? {})');
     buffer.writeln('        .execute();');
     buffer.writeln('    if (ref.mounted) {');
@@ -111,7 +117,12 @@ class ProviderGenerator {
     buffer.writeln('    final client = ref.read($clientProviderName);');
     buffer.writeln("    final builder = client.from('${model.name}')");
     buffer.writeln('        .select($className.queryFields)');
-    buffer.writeln('        .update(id: id, payload: payload.toJson(), deltaUpdate: deltaUpdate);');
+    buffer.writeln('        .update(');
+    buffer.writeln('          id: id,');
+    buffer.writeln('          payload: payload.toJson(),');
+    buffer.writeln('          deltaUpdate: deltaUpdate,');
+    buffer.writeln('          includeRelations: $className.supportsMutationRelations,');
+    buffer.writeln('        );');
     buffer.writeln('    final mutation = connect != null || disconnect != null');
     buffer.writeln('        ? builder.connectWith(connect?.toJson() ?? {}).disconnectFrom(disconnect?.toJson() ?? {})');
     buffer.writeln('        : builder;');

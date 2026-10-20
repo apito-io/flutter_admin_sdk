@@ -4,6 +4,7 @@ library flutter_admin_sdk;
 export 'src/runtime/admin_models.dart';
 export 'src/runtime/auth.dart';
 export 'src/runtime/client.dart';
+export 'src/runtime/client_runtime.dart';
 export 'src/runtime/config.dart';
 export 'src/runtime/crud_filter.dart';
 export 'src/runtime/document_builder.dart';

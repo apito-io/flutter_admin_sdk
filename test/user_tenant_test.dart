@@ -40,7 +40,7 @@ void main() {
       client = ApitoClient(
         config: const ApitoConfig(
           endpoint: 'http://localhost:5050/system/graphql',
-          apiKey: 'test-key',
+          accessToken: 'apt_test',
         ),
         httpClient: httpClient,
       );

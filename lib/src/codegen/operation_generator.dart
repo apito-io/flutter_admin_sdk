@@ -6,7 +6,13 @@ class OperationGenerator {
   const OperationGenerator();
 
   String generateGraphqlFile(ApitoSchemaModel model) {
-    final docs = DocumentBuilder(model.name);
+    final docs = DocumentBuilder(
+      model.name,
+      options: DocumentBuilderOptions(
+        supportsRelation: model.listRelationFilterKeys.isNotEmpty,
+        supportsMutationRelations: model.relationConnectKeys.isNotEmpty,
+      ),
+    );
     var fields = model.queryFieldNames;
     if (fields.isEmpty) {
       fields = ['id'];

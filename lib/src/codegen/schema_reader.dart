@@ -169,12 +169,21 @@ class SchemaReader {
     required String endpoint,
     required String apiKey,
     String? tenantId,
+    String? projectId,
     List<String>? modelFilter,
   }) async {
+    final key = apiKey.trim();
     final headers = <String, String>{
       'Content-Type': 'application/json',
-      if (apiKey.isNotEmpty) 'X-Apito-Key': apiKey,
-      if (tenantId != null && tenantId.isNotEmpty) 'X-Apito-Tenant-ID': tenantId,
+      if (key.startsWith('apt_')) ...{
+        'Authorization': 'Bearer $key',
+        'X-Use-Cookies': 'false',
+      } else if (key.isNotEmpty)
+        'X-Apito-Key': key,
+      if (tenantId != null && tenantId.trim().isNotEmpty)
+        'X-Apito-Tenant-ID': tenantId.trim(),
+      if (projectId != null && projectId.trim().isNotEmpty)
+        'X-Apito-Project-Id': projectId.trim(),
     };
 
     final response = await _http.post(

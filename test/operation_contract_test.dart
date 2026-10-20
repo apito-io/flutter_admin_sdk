@@ -15,6 +15,13 @@ void main() {
             ApitoSchemaField(name: 'loan_status', graphqlType: 'String'),
             ApitoSchemaField(name: 'total_amount', graphqlType: 'Float'),
           ],
+          relationKeys: [
+            ApitoSchemaRelationKey(
+              name: 'customer',
+              forListFilter: true,
+              forConnect: true,
+            ),
+          ],
         ),
       );
 
@@ -40,9 +47,29 @@ void main() {
         const ApitoSchemaModel(
           name: 'loan',
           fields: [ApitoSchemaField(name: 'loan_id', graphqlType: 'String')],
+          relationKeys: [
+            ApitoSchemaRelationKey(
+              name: 'customer',
+              forListFilter: true,
+              forConnect: true,
+            ),
+          ],
         ),
       );
       expect(fromOpGen, contains(fromBuilder.trim()));
+    });
+
+    test('model without relations omits relation and connect', () {
+      final doc = const OperationGenerator().generateGraphqlFile(
+        const ApitoSchemaModel(
+          name: 'chat_thread',
+          fields: [ApitoSchemaField(name: 'body', graphqlType: 'String')],
+        ),
+      );
+      expect(doc, contains('chatThreadList('));
+      expect(doc, isNot(contains('relation:')));
+      expect(doc, isNot(contains('Relation_Connect_Payload')));
+      expect(doc, isNot(contains('Relation_Disconnect_Payload')));
     });
   });
 }

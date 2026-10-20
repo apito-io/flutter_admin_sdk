@@ -5,6 +5,7 @@ class ApitoUser {
   const ApitoUser({
     required this.id,
     this.email,
+    this.username,
     this.phone,
     this.role,
     this.tenantId,
@@ -16,6 +17,7 @@ class ApitoUser {
 
   final String id;
   final String? email;
+  final String? username;
   final String? phone;
   final String? role;
   final String? tenantId;
@@ -27,6 +29,7 @@ class ApitoUser {
   factory ApitoUser.fromJson(Map<String, dynamic> json) => ApitoUser(
         id: json['id'] as String? ?? '',
         email: json['email'] as String?,
+        username: json['username'] as String?,
         phone: json['phone'] as String?,
         role: json['role'] as String?,
         tenantId: json['tenant_id'] as String?,
@@ -48,6 +51,7 @@ class LoginUserParams {
     this.code,
     this.state,
     this.idToken,
+    this.accessToken,
     this.signup,
   });
 
@@ -63,6 +67,9 @@ class LoginUserParams {
   final String? code;
   final String? state;
   final String? idToken;
+
+  /// Facebook user access token (AuthMethod `facebook_access_token`).
+  final String? accessToken;
 
   /// When `false`, Google/OAuth must find an existing account (no auto-provision).
   /// Omit / `true`: allow signup auto-provision when [tenantId] is empty.

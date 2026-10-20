@@ -33,7 +33,12 @@ class MutationBuilder {
   final bool deltaUpdate;
   final bool includeRelations;
 
-  DocumentBuilder get _docs => DocumentBuilder(model);
+  DocumentBuilder get _docs => DocumentBuilder(
+        model,
+        options: DocumentBuilderOptions(
+          supportsMutationRelations: includeRelations,
+        ),
+      );
 
   MutationBuilder _copy({
     Map<String, dynamic>? connectPayload,

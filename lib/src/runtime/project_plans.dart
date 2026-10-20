@@ -165,6 +165,7 @@ class ProjectPlan {
 /// System GraphQL plan catalog (requires plans-read / project admin token).
 extension ApitoProjectPlans on ApitoClient {
   Future<List<ProjectPlan>> listProjectPlans() async {
+    requireOperatorCredential('getProjectPlans');
     const query = r'''
       query GetProjectPlans {
         getProjectPlans {

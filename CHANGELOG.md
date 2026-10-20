@@ -2,6 +2,31 @@
 
 All notable changes to `flutter_admin_sdk` are documented here.
 
+## [0.6.15] - 2026-10-20
+
+### Added
+
+- **`fetchClientRuntime(platform)`** — posts the named `clientRuntime` query and returns that platform's policy. It does not call `getModelData`.
+
+### Fixed
+
+- **Connect factories** — Relation connect payloads that list both `train` and
+  `train_id` no longer emit two `Connect.train` factories (Dart compile error).
+  Codegen keeps the `*_id` scalar.
+
+## [0.6.14] - 2026-09-13
+
+### Added
+
+- **`oauthState(projectId, provider)`** — system query for facebook/github/x/linkedin
+  authorize state. `googleOAuthState` remains the Google-only alias.
+- **`searchUsers`** now selects `username` (already on `ApitoUser` lookups / `q`).
+
+### Docs
+
+- **`registerUser`** (public self-signup; role forced to `default_registration_role`)
+  shipped in 0.6.11 and is the mobile path — not admin `createUser`.
+
 ## [0.6.13] - 2026-09-02
 
 ### Added

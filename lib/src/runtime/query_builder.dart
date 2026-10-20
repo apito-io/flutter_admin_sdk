@@ -154,13 +154,17 @@ class QueryBuilder {
   /// `*_WHERE_RELATION_FILTER_CONDITION` (e.g. nested-only models).
   QueryBuilder withoutRelation() => _copy(supportsRelation: false);
 
-  MutationBuilder insert({required Map<String, dynamic> payload}) {
+  MutationBuilder insert({
+    required Map<String, dynamic> payload,
+    bool includeRelations = true,
+  }) {
     return MutationBuilder(
       client: client,
       model: model,
       fields: fields,
       mode: MutationMode.create,
       payload: payload,
+      includeRelations: includeRelations,
     );
   }
 
@@ -168,6 +172,7 @@ class QueryBuilder {
     required String id,
     required Map<String, dynamic> payload,
     bool deltaUpdate = false,
+    bool includeRelations = true,
   }) {
     return MutationBuilder(
       client: client,
@@ -177,6 +182,7 @@ class QueryBuilder {
       recordId: id,
       payload: payload,
       deltaUpdate: deltaUpdate,
+      includeRelations: includeRelations,
     );
   }
 
