@@ -31,6 +31,20 @@ class OperationGenerator {
     buffer.writeln(docs.buildUpdateMutation(fields: fields));
     buffer.writeln();
     buffer.writeln(docs.buildDeleteMutation());
+    buffer.writeln();
+    final singular = apitoSingularResourceName(model.name);
+    final typeName = apitoSingularGraphQLTypeName(model.name);
+    buffer.writeln('''
+subscription ${typeName}Changed(\$events: [String!], \$id: String, \$where: JSON) {
+  ${singular}Changed(events: \$events, id: \$id, where: \$where) {
+    event
+    model
+    id
+    projectId
+    node
+    previousValues
+  }
+}''');
 
     return buffer.toString();
   }

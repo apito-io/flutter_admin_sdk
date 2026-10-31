@@ -1,3 +1,9 @@
+## 2026-10-30 — Native graphql-transport-ws
+
+- **Changed:** Added the subscription client, watch/refetch helpers, and codegen for `{Model}Changed` plus `watch*List`. Pubspec is **0.6.16** and depends on `web_socket_channel`.
+- **Why:** Apps could only poll. The shared contract needs one socket, the same HTTP headers, and a browser ticket that never lands in the URL.
+- **Affected:** `lib/src/runtime/subscription_*.dart`, `client.dart`, `config.dart`, both generators, `CONTRACT.md`. Ask before tag or `./command.sh save`.
+
 ## 2026-10-18 — pub.dev metadata, still unpublished
 
 - **Changed:** Added an Apache-2.0 LICENSE and pubspec homepage, repository, issue tracker, documentation, and topics. README leads with REST and GraphQL.

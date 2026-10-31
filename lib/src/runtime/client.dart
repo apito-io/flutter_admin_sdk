@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 
 import 'client_runtime.dart';
 import 'config.dart';
+import 'subscription_client.dart';
+import 'subscription_events.dart';
 import 'query_builder.dart';
 import 'system_operation_classifier.dart';
 import 'types.dart';
@@ -49,6 +51,35 @@ class ApitoClient {
       'OPERATOR_CREDENTIAL_REQUIRED: $operation requires an apt_ operator token',
     );
   }
+
+  ApitoSubscriptionClient? _subscriptions;
+
+  ApitoSubscriptionClient get subscriptions => _subscriptions ??= ApitoSubscriptionClient(
+        config: _config,
+        headers: () => buildHeaders(),
+        onTokenExpired: onTokenExpired,
+        httpClient: _http,
+      );
+
+  Stream<ApitoSubscriptionSignal> get subscriptionSignals => subscriptions.signals;
+
+  void setAppInForeground(bool foreground) => subscriptions.setAppInForeground(foreground);
+
+  Stream<Map<String, dynamic>> subscribe(
+    String document, {
+    Map<String, dynamic>? variables,
+  }) =>
+      subscriptions.subscribe(document, variables: variables);
+
+  Stream<ModelChangeEvent> modelChanges(
+    String model, {
+    List<String>? events,
+    String? id,
+    Map<String, dynamic>? where,
+  }) =>
+      subscriptions.modelChanges(model, events: events, id: id, where: where);
+
+  Stream<BroadcastMessage> broadcast(String channel) => subscriptions.broadcast(channel);
 
   QueryBuilder from(String model) => QueryBuilder(client: this, model: model);
 
@@ -298,5 +329,8 @@ class ApitoClient {
     data['deleteModelData'];
   }
 
-  void close() => _http.close();
+  void close() {
+    _subscriptions?.dispose();
+    _http.close();
+  }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_admin_sdk/flutter_admin_sdk.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -62,6 +64,53 @@ void main() {
       );
       expect(sub?.id, 'sub_1');
       expect(sub?.provider, 'custom');
+      expect(calls, 1);
+      client.close();
+    });
+
+    test('signed-in ak_ session starts checkout on secured graphql', () async {
+      var calls = 0;
+      final client = ApitoClient(
+        config: const ApitoConfig(
+          endpoint: 'http://localhost:5050/secured/graphql',
+          apiKey: 'ak_session',
+          projectId: 'kisti_gkrml',
+          tenantId: 'tenant',
+        ),
+        httpClient: MockClient((request) async {
+          calls++;
+          expect(request.url.path, '/secured/graphql');
+          expect(request.headers['X-Apito-Key'], 'ak_session');
+          expect(request.headers['X-Apito-Tenant-ID'], 'tenant');
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          final vars = body['variables'] as Map;
+          expect(body['query'], contains('beginMyHostedPayment'));
+          expect(vars.containsKey('amount'), isFalse);
+          expect(vars.containsKey('tenant_id'), isFalse);
+          expect(vars['client_platform'], 'android');
+          return http.Response(
+            jsonEncode({
+              'data': {
+                'beginMyHostedPayment': {
+                  'transaction_id': 'tx1',
+                  'redirect_url': 'https://sandbox.eps.com.bd/pay',
+                  'status': 'pending',
+                },
+              },
+            }),
+            200,
+          );
+        }),
+      );
+      final tx = await client.beginTenantHostedPayment(
+        projectId: 'kisti_gkrml',
+        tenantId: 'tenant',
+        provider: 'eps',
+        planTier: 'pro',
+        clientPlatform: 'android',
+      );
+      expect(tx.id, 'tx1');
+      expect(tx.redirectUrl, contains('eps.com.bd'));
       expect(calls, 1);
       client.close();
     });

@@ -1,6 +1,6 @@
 name: flutter_admin_sdk
 description: REST and GraphQL admin SDK for Flutter apps that talk to an Apito backend, including queries, auth, files, and schema codegen.
-version: 0.6.15
+version: 0.6.16
 publish_to: none
 homepage: https://apito.io
 repository: https://github.com/apito-io/flutter_admin_sdk
@@ -21,6 +21,7 @@ dependencies:
   meta: ^1.9.0
   json_annotation: ^4.9.0
   path: ^1.9.0
+  web_socket_channel: ^3.0.1
 
 dev_dependencies:
   build: ^2.4.0

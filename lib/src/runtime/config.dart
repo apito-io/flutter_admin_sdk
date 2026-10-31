@@ -11,6 +11,10 @@ class ApitoConfig {
     this.accessToken,
     this.useBearerAuth = false,
     this.restBaseUrl,
+    this.subscriptionEndpoint,
+    this.subscriptionConnectTimeout = const Duration(seconds: 10),
+    this.subscriptionInitialBackoff = const Duration(milliseconds: 500),
+    this.subscriptionMaxBackoff = const Duration(seconds: 30),
   });
 
   final String endpoint;
@@ -28,6 +32,14 @@ class ApitoConfig {
   /// REST base URL for file storage. Defaults to endpoint with `/graphql` stripped.
   final String? restBaseUrl;
 
+  /// WebSocket URL for GraphQL subscriptions. When null, derived from [endpoint]
+  /// by appending `/subscription` and switching `http`/`https` to `ws`/`wss`.
+  final String? subscriptionEndpoint;
+
+  final Duration subscriptionConnectTimeout;
+  final Duration subscriptionInitialBackoff;
+  final Duration subscriptionMaxBackoff;
+
   ApitoConfig copyWith({
     String? endpoint,
     String? apiKey,
@@ -37,6 +49,10 @@ class ApitoConfig {
     String? accessToken,
     bool? useBearerAuth,
     String? restBaseUrl,
+    String? subscriptionEndpoint,
+    Duration? subscriptionConnectTimeout,
+    Duration? subscriptionInitialBackoff,
+    Duration? subscriptionMaxBackoff,
   }) {
     return ApitoConfig(
       endpoint: endpoint ?? this.endpoint,
@@ -47,6 +63,12 @@ class ApitoConfig {
       accessToken: accessToken ?? this.accessToken,
       useBearerAuth: useBearerAuth ?? this.useBearerAuth,
       restBaseUrl: restBaseUrl ?? this.restBaseUrl,
+      subscriptionEndpoint: subscriptionEndpoint ?? this.subscriptionEndpoint,
+      subscriptionConnectTimeout:
+          subscriptionConnectTimeout ?? this.subscriptionConnectTimeout,
+      subscriptionInitialBackoff:
+          subscriptionInitialBackoff ?? this.subscriptionInitialBackoff,
+      subscriptionMaxBackoff: subscriptionMaxBackoff ?? this.subscriptionMaxBackoff,
     );
   }
 }

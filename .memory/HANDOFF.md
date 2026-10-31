@@ -1,3 +1,10 @@
+# Handoff — flutter_admin_sdk 2026-10-30
+
+- **Done:** Native subscription client, watch helpers, codegen subscription document. Pubspec **0.6.16**. `CONTRACT.md` section 5 states the JS/Go parity shape without implementing those clients.
+- **Verified:** `dart test test/subscription_client_test.dart test/operation_contract_test.dart test/client_headers_test.dart` passed.
+- **Not done:** No tag. Engine on 5050 does not have the ticket route until restart.
+- **Do not:** Put the credential in the socket URL. `./command.sh save` until asked.
+
 # Handoff — flutter_admin_sdk 2026-10-18
 
 - **Done:** LICENSE, pubspec discovery fields, README opening. `publish_to: none` was not removed.

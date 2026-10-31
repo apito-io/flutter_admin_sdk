@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -341,6 +342,144 @@ extension ApitoProjectPayment on ApitoClient {
         .toList();
   }
 
+  /// Starts OSS hosted checkout. The client does not send an amount.
+  Future<PaymentTransaction> beginHostedPayment({
+    required String projectId,
+    required String provider,
+    String flow = 'one_time',
+    String? productKey,
+    String? idempotencyKey,
+  }) async {
+    final uri = _projectPaymentUri(
+      '/system/v1/payments/projects/$projectId/providers/$provider/checkout',
+    );
+    final json = await _projectPaymentRequest(
+      () => httpClient.post(
+        uri,
+        headers: buildHeaders(projectId: projectId),
+        body: jsonEncode({
+          'flow': flow,
+          if (productKey != null && productKey.isNotEmpty) 'product_key': productKey,
+          if (idempotencyKey != null && idempotencyKey.isNotEmpty)
+            'idempotency_key': idempotencyKey,
+        }),
+      ),
+    );
+    return PaymentTransaction.fromJson(json);
+  }
+
+  /// Pro tenant checkout on `/secured/graphql`.
+  ///
+  /// The signed-in `ak_` session is the same credential as `myProjectPlans`.
+  /// The login bootstrap key cannot call this field: that path rejects it
+  /// before the resolver. Price and tenant come from the server.
+  Future<PaymentTransaction> beginTenantHostedPayment({
+    required String projectId,
+    required String tenantId,
+    required String provider,
+    String? planTier,
+    String? productKey,
+    String flow = 'one_time',
+    String? clientPlatform,
+  }) async {
+    const document = r'''
+      query BeginMyHostedPayment($provider: String!, $plan_tier: String, $product_key: String, $flow: String, $client_platform: String) {
+        beginMyHostedPayment(provider: $provider, plan_tier: $plan_tier, product_key: $product_key, flow: $flow, client_platform: $client_platform) {
+          transaction_id
+          redirect_url
+          status
+        }
+      }
+    ''';
+    final data = await execute(
+      document,
+      variables: {
+        'provider': provider,
+        if (planTier != null && planTier.isNotEmpty) 'plan_tier': planTier,
+        if (productKey != null && productKey.isNotEmpty) 'product_key': productKey,
+        'flow': flow,
+        if (clientPlatform != null && clientPlatform.isNotEmpty)
+          'client_platform': clientPlatform,
+      },
+      projectId: projectId,
+      tenantId: tenantId,
+    );
+    final value = data['beginMyHostedPayment'];
+    if (value is Map<String, dynamic>) return PaymentTransaction.fromJson(value);
+    if (value is Map) {
+      return PaymentTransaction.fromJson(Map<String, dynamic>.from(value));
+    }
+    throw ApitoError('beginMyHostedPayment returned no checkout');
+  }
+
+  /// Status of one checkout owned by the signed-in tenant. Same auth plane as
+  /// [beginTenantHostedPayment].
+  Future<PaymentTransaction> getMyPaymentTransaction({
+    required String projectId,
+    required String tenantId,
+    required String transactionId,
+  }) async {
+    const document = r'''
+      query MyPaymentTransaction($transaction_id: String!) {
+        myPaymentTransaction(transaction_id: $transaction_id) {
+          transaction_id
+          redirect_url
+          status
+        }
+      }
+    ''';
+    final data = await execute(
+      document,
+      variables: {'transaction_id': transactionId},
+      projectId: projectId,
+      tenantId: tenantId,
+    );
+    final value = data['myPaymentTransaction'];
+    if (value is Map<String, dynamic>) return PaymentTransaction.fromJson(value);
+    if (value is Map) {
+      return PaymentTransaction.fromJson(Map<String, dynamic>.from(value));
+    }
+    throw ApitoError('myPaymentTransaction returned no checkout');
+  }
+
+  Future<PaymentTransaction> getPaymentTransaction({
+    required String projectId,
+    required String transactionId,
+  }) async {
+    final uri = _projectPaymentUri(
+      '/system/v1/payments/projects/$projectId/transactions/$transactionId',
+    );
+    final json = await _projectPaymentRequest(
+      () => httpClient.get(uri, headers: buildHeaders(projectId: projectId)),
+    );
+    final row = json['transaction'];
+    if (row is Map<String, dynamic>) return PaymentTransaction.fromJson(row);
+    if (row is Map) return PaymentTransaction.fromJson(Map<String, dynamic>.from(row));
+    return PaymentTransaction.fromJson(json);
+  }
+
+  /// Polls until the ledger reaches a terminal status or [timeout] elapses.
+  Future<PaymentTransaction> waitForPayment({
+    required String projectId,
+    required String transactionId,
+    Duration timeout = const Duration(minutes: 2),
+    Duration interval = const Duration(seconds: 2),
+  }) async {
+    final deadline = DateTime.now().add(timeout);
+    PaymentTransaction latest = await getPaymentTransaction(
+      projectId: projectId,
+      transactionId: transactionId,
+    );
+    while (!latest.isTerminal && DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(interval);
+      latest = await getPaymentTransaction(
+        projectId: projectId,
+        transactionId: transactionId,
+      );
+    }
+    return latest;
+  }
+
   /// Receipt PDF for one invoice the signed-in user can access.
   Future<Uint8List> downloadTenantInvoiceReceipt({
     required String projectId,
@@ -364,6 +503,55 @@ extension ApitoProjectPayment on ApitoClient {
       );
     }
     return response.bodyBytes;
+  }
+}
+
+/// OSS payment ledger row. Browser redirects are not proof; [status] is.
+class PaymentTransaction {
+  const PaymentTransaction({
+    required this.id,
+    required this.status,
+    this.redirectUrl,
+    this.provider,
+    this.amount,
+    this.currency,
+    this.clientReference,
+  });
+
+  final String id;
+  final String status;
+  final String? redirectUrl;
+  final String? provider;
+  final String? amount;
+  final String? currency;
+  final String? clientReference;
+
+  bool get isTerminal {
+    switch (status) {
+      case 'succeeded':
+      case 'failed':
+      case 'canceled':
+      case 'expired':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  factory PaymentTransaction.fromJson(Map<String, dynamic> json) {
+    final nested = json['transaction'];
+    final row = nested is Map
+        ? Map<String, dynamic>.from(nested)
+        : json;
+    return PaymentTransaction(
+      id: (row['id'] ?? json['transaction_id'] ?? '').toString(),
+      status: (row['status'] ?? json['status'] ?? '').toString(),
+      redirectUrl: (json['redirect_url'] ?? row['redirect_url']) as String?,
+      provider: row['provider'] as String?,
+      amount: row['amount']?.toString(),
+      currency: row['currency'] as String?,
+      clientReference: row['client_reference'] as String?,
+    );
   }
 }
 

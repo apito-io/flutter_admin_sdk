@@ -20,7 +20,7 @@ Offline codegen uses a checked-in introspection JSON:
 
 Live fetch fallback: POST introspection query with `X-Apito-Key` + optional `X-Apito-Tenant-ID`.
 
-## 3. Operation doc format (5 ops per model)
+## 3. Operation doc format (6 ops per model)
 
 Each model emits:
 1. `Get{Model}List` — list + count
@@ -28,6 +28,7 @@ Each model emits:
 3. `Create{Model}` — create mutation
 4. `Update{Model}` — update mutation
 5. `Delete{Model}` — delete mutation
+6. `{Model}Changed` — GraphQL subscription (`events`, `id`, `where`)
 
 Uses Apito composed type names (`{Model}List_Input_Where_Payload`, `{Model}_Create_Payload`, etc.).
 
@@ -65,7 +66,17 @@ When the engine URL is a Cloudflare Worker (`-tags cloudflare`), the SDK contrac
 
 Use the native/pro engine for tenant lifecycle and Google end-user login, or handle these errors in client code.
 
-## 5. Codegen outputs
+## 5. Realtime
+
+Flutter ships a native `graphql-transport-ws` client (`ApitoClient.subscribe`, `modelChanges`, `broadcast`). JS and Go keep the same document shape when they add clients later:
+
+- Endpoint: HTTP GraphQL URL with `/subscription`, `http`/`https` swapped for `ws`/`wss`.
+- Auth: the same headers as HTTP. Browsers exchange `POST .../subscription-ticket` and send `apito-ticket.<ticket>` as a WebSocket subprotocol. Never put the credential in the URL.
+- Model field: `<singular>Changed(events, id, where)` with `event`, `model`, `id`, `projectId`, `node`, `previousValues`.
+- `where` uses the same scalar operators as list filters (`eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `contains`, `in`, `not_in`). Unsupported filters are rejected. A document matches if either `node` or `previousValues` matches, so a row leaving a filter is visible.
+- Delivery: live only. A disconnect can drop events. Generated watchers refetch once on `resyncRequired`. Memory bus is single-node and non-durable. JetStream replay is not part of this client.
+
+## 6. Codegen outputs
 
 | SDK | Tool | Hooks |
 |-----|------|-------|
